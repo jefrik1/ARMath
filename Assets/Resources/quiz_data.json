@@ -1,0 +1,311 @@
+{
+  "version": 2,
+  "kategories": [
+    {
+      "nama": "Pecahan",
+      "target": "PecahanManager",
+      "soals": [
+        {
+          "soal": "1/2 + 1/4 = ...",
+          "jawaban": "3/4",
+          "pengecof": ["1/3", "2/3", "1/4"],
+          "langkah": "Samakan penyebut (1/2 = 2/4), lalu jumlahkan pembilang: 2/4 + 1/4 = 3/4."
+        },
+        {
+          "soal": "1/3 + 1/6 = ...",
+          "jawaban": "1/2",
+          "pengecof": ["1/6", "2/3", "3/6", "5/6"],
+          "langkah": "Samakan penyebut (1/3 = 2/6), lalu jumlahkan: 2/6 + 1/6 = 3/6 = 1/2."
+        },
+        {
+          "soal": "3/4 - 1/2 = ...",
+          "jawaban": "1/4",
+          "pengecof": ["1/2", "2/4", "3/8", "1/3"],
+          "langkah": "Samakan penyebut (1/2 = 2/4), lalu kurangkan: 3/4 - 2/4 = 1/4."
+        },
+        {
+          "soal": "5/6 - 1/3 = ...",
+          "jawaban": "1/2",
+          "pengecof": ["1/3", "2/6", "3/6", "2/3"],
+          "langkah": "Samakan penyebut (1/3 = 2/6), lalu kurangkan: 5/6 - 2/6 = 3/6 = 1/2."
+        },
+        {
+          "soal": "1/2 x 2/3 = ...",
+          "jawaban": "1/3",
+          "pengecof": ["2/6", "3/6", "1/6", "2/5"],
+          "langkah": "Kalikan pembilang (1x2=2) dan penyebut (2x3=6): 2/6 = 1/3."
+        },
+        {
+          "soal": "3/4 x 2/5 = ...",
+          "jawaban": "3/10",
+          "pengecof": ["6/20", "5/9", "3/20", "6/9"],
+          "langkah": "Kalikan: (3x2)/(4x5) = 6/20 = 3/10."
+        },
+        {
+          "soal": "1/2 / 1/4 = ...",
+          "jawaban": "2",
+          "pengecof": ["1/8", "1/2", "4", "1"],
+          "langkah": "Balik pecahan kedua (1/4 -> 4/1), lalu kalikan: 1/2 x 4/1 = 4/2 = 2."
+        },
+        {
+          "soal": "3/4 / 1/2 = ...",
+          "jawaban": "3/2",
+          "pengecof": ["3/8", "1/2", "2/3", "3/4"],
+          "langkah": "Balik pecahan kedua (1/2 -> 2/1), lalu kalikan: 3/4 x 2/1 = 6/4 = 3/2."
+        }
+      ]
+    },
+    {
+      "nama": "BangunRuang",
+      "target": "BangunRuangManager",
+      "soals": [
+        {
+          "soal": "Volume kubus dengan sisi 5 cm adalah...",
+          "jawaban": "125",
+          "pengecof": ["25", "100", "150", "75"],
+          "langkah": "V = s^3 = 5 x 5 x 5 = 125 cm^3."
+        },
+        {
+          "soal": "Luas permukaan balok dengan p=6, l=4, t=3 adalah...",
+          "jawaban": "108",
+          "pengecof": ["72", "96", "48", "84"],
+          "langkah": "L = 2 x (pl + pt + lt) = 2 x (24 + 18 + 12) = 2 x 54 = 108."
+        }
+      ]
+    },
+    {
+      "nama": "Desimal",
+      "target": "DesimalManager",
+      "soals": [
+        {
+          "soal": "2.5 + 3.2 = ...",
+          "jawaban": "5.7",
+          "pengecof": ["5.3", "5.9", "4.7"],
+          "langkah": "Samakan kolom desimal: 2.5 + 3.2 = 5.7."
+        },
+        {
+          "soal": "7.8 - 4.3 = ...",
+          "jawaban": "3.5",
+          "pengecof": ["3.3", "3.8", "4.5"],
+          "langkah": "Kurangkan: 7.8 - 4.3 = 3.5."
+        },
+        {
+          "soal": "0.3 x 0.4 = ...",
+          "jawaban": "0.12",
+          "pengecof": ["1.2", "0.012", "0.7"],
+          "langkah": "3 x 4 = 12, koma digeser 2 dari kanan: 0.12."
+        },
+        {
+          "soal": "1.2 / 0.3 = ...",
+          "jawaban": "4",
+          "pengecof": ["0.4", "0.36", "40"],
+          "langkah": "1.2 / 0.3 = 12 / 3 = 4."
+        },
+        {
+          "soal": "5.6 + 2.4 = ...",
+          "jawaban": "8.0",
+          "pengecof": ["7.0", "8.2", "7.8"],
+          "langkah": "5.6 + 2.4 = 8.0."
+        },
+        {
+          "soal": "9.5 - 6.2 = ...",
+          "jawaban": "3.3",
+          "pengecof": ["3.5", "3.2", "4.3"],
+          "langkah": "9.5 - 6.2 = 3.3."
+        },
+        {
+          "soal": "0.6 x 0.7 = ...",
+          "jawaban": "0.42",
+          "pengecof": ["4.2", "0.042", "0.13"],
+          "langkah": "6 x 7 = 42, koma digeser 2 dari kanan: 0.42."
+        },
+        {
+          "soal": "2.4 / 0.6 = ...",
+          "jawaban": "4",
+          "pengecof": ["0.4", "0.6", "1.8"],
+          "langkah": "2.4 / 0.6 = 24 / 6 = 4."
+        }
+      ]
+    },
+    {
+      "nama": "Perbandingan",
+      "target": "PerbandinganManager",
+      "soals": [
+        {
+          "soal": "2 : 3 = 6 : ...",
+          "jawaban": "9",
+          "pengecof": ["4", "8", "12"],
+          "langkah": "2/3 = 6/x => x = 6 x 3 / 2 = 9."
+        },
+        {
+          "soal": "Perbandingan 3 : 4. Jika bagian pertama 12, berapa bagian kedua?",
+          "jawaban": "16",
+          "pengecof": ["9", "15", "20"],
+          "langkah": "Faktor = 12 / 3 = 4. Bagian kedua = 4 x 4 = 16."
+        },
+        {
+          "soal": "Sederhanakan perbandingan 8 : 12",
+          "jawaban": "2 : 3",
+          "pengecof": ["4 : 6", "1 : 2", "3 : 4"],
+          "langkah": "FPB(8,12) = 4. 8/4 : 12/4 = 2 : 3."
+        },
+        {
+          "soal": "Perbandingan 5 : 7. Jika bagian pertama 20, berapa bagian kedua?",
+          "jawaban": "28",
+          "pengecof": ["14", "35", "21"],
+          "langkah": "Faktor = 20 / 5 = 4. 7 x 4 = 28."
+        }
+      ]
+    },
+    {
+      "nama": "Skala",
+      "target": "SkalaManager",
+      "soals": [
+        {
+          "soal": "Skala peta 1 : 100.000. Jarak 2 kota di peta 3 cm. Jarak sebenarnya adalah ... km.",
+          "jawaban": "3",
+          "pengecof": ["1", "5", "10"],
+          "langkah": "Jarak sebenarnya = 3 x 100.000 = 300.000 cm = 3 km."
+        },
+        {
+          "soal": "Skala peta 1 : 50.000. Jarak 2 kota 20 km. Berapa cm di peta?",
+          "jawaban": "40",
+          "pengecof": ["20", "60", "10"],
+          "langkah": "20 km = 2.000.000 cm. 2.000.000 / 50.000 = 40 cm."
+        },
+        {
+          "soal": "Skala denah 1 : 100. Di denah ukuran ruang 5 cm. Ukuran sebenarnya ... cm?",
+          "jawaban": "500",
+          "pengecof": ["50", "100", "1000"],
+          "langkah": "5 x 100 = 500 cm."
+        },
+        {
+          "soal": "Skala peta 1 : 200.000. Jarak 2 kota di peta 5 cm. Jarak sebenarnya adalah ... km.",
+          "jawaban": "10",
+          "pengecof": ["5", "20", "25"],
+          "langkah": "5 x 200.000 = 1.000.000 cm = 10 km."
+        }
+      ]
+    },
+    {
+      "nama": "BangunDatar",
+      "target": "BangunDatarManager",
+      "soals": [
+        {
+          "soal": "Luas persegi dengan sisi 6 cm adalah ... cm².",
+          "jawaban": "36",
+          "pengecof": ["12", "24", "18"],
+          "langkah": "Luas = s x s = 6 x 6 = 36 cm²."
+        },
+        {
+          "soal": "Keliling persegi panjang p=8 cm, l=5 cm adalah ... cm.",
+          "jawaban": "26",
+          "pengecof": ["13", "40", "30"],
+          "langkah": "Keliling = 2 x (8+5) = 2 x 13 = 26 cm."
+        },
+        {
+          "soal": "Luas segitiga alas 10 cm, tinggi 6 cm adalah ... cm².",
+          "jawaban": "30",
+          "pengecof": ["60", "16", "15"],
+          "langkah": "Luas = (10 x 6) / 2 = 30 cm²."
+        },
+        {
+          "soal": "Luas trapesium sisi sejajar 6 cm dan 10 cm, tinggi 4 cm adalah ... cm².",
+          "jawaban": "32",
+          "pengecof": ["64", "24", "16"],
+          "langkah": "(6+10) x 4 / 2 = 16 x 4 / 2 = 32 cm²."
+        }
+      ]
+    },
+    {
+      "nama": "Volume",
+      "target": "VolumeManager",
+      "soals": [
+        {
+          "soal": "Volume kubus dengan sisi 4 cm adalah ... cm³.",
+          "jawaban": "64",
+          "pengecof": ["16", "32", "128"],
+          "langkah": "V = 4³ = 4 x 4 x 4 = 64 cm³."
+        },
+        {
+          "soal": "Volume balok p=5, l=3, t=4 cm adalah ... cm³.",
+          "jawaban": "60",
+          "pengecof": ["30", "15", "20"],
+          "langkah": "V = 5 x 3 x 4 = 60 cm³."
+        },
+        {
+          "soal": "Volume tabung r=3 cm, t=10 cm (π=3.14) adalah ... cm³.",
+          "jawaban": "283",
+          "pengecof": ["94", "188", "377"],
+          "langkah": "V = 3.14 x 9 x 10 = 282.6 ≈ 283 cm³."
+        },
+        {
+          "soal": "Volume kubus dengan sisi 6 cm adalah ... cm³.",
+          "jawaban": "216",
+          "pengecof": ["36", "108", "72"],
+          "langkah": "V = 6³ = 6 x 6 x 6 = 216 cm³."
+        }
+      ]
+    },
+    {
+      "nama": "Waktu",
+      "target": "WaktuManager",
+      "soals": [
+        {
+          "soal": "3 jam = ... menit",
+          "jawaban": "180",
+          "pengecof": ["120", "240", "60"],
+          "langkah": "3 x 60 = 180 menit."
+        },
+        {
+          "soal": "150 menit = ... jam ... menit",
+          "jawaban": "2 jam 30 menit",
+          "pengecof": ["1 jam 50 menit", "3 jam", "2 jam 50 menit"],
+          "langkah": "150 / 60 = 2 jam sisa 30 menit."
+        },
+        {
+          "soal": "Dimulai pukul 8:00, berlangsung 45 menit. Selesai pukul ...?",
+          "jawaban": "8:45",
+          "pengecof": ["8:30", "9:00", "9:15"],
+          "langkah": "8:00 + 45 menit = 8:45."
+        },
+        {
+          "soal": "Pukul 9:30 ditambah 2 jam 15 menit = pukul ...?",
+          "jawaban": "11:45",
+          "pengecof": ["10:45", "11:30", "11:15"],
+          "langkah": "9:30 + 2 jam = 11:30, + 15 menit = 11:45."
+        }
+      ]
+    },
+    {
+      "nama": "IrisanBilangan",
+      "target": "IrisanBilanganManager",
+      "soals": [
+        {
+          "soal": "Diketahui n(A)=8, n(B)=6, n(A∩B)=3. n(A∪B)=...",
+          "jawaban": "11",
+          "pengecof": ["14", "17", "5"],
+          "langkah": "n(A∪B) = 8 + 6 - 3 = 11."
+        },
+        {
+          "soal": "Diketahui n(A)=10, n(B)=7, n(A∪B)=13. n(A∩B)=...",
+          "jawaban": "4",
+          "pengecof": ["17", "3", "10"],
+          "langkah": "n(A∩B) = 10 + 7 - 13 = 4."
+        },
+        {
+          "soal": "A dan B saling lepas. n(A)=5, n(B)=8. n(A∪B)=...",
+          "jawaban": "13",
+          "pengecof": ["3", "40", "8"],
+          "langkah": "Karena saling lepas, n(A∪B) = 5 + 8 = 13."
+        },
+        {
+          "soal": "Diketahui n(A)=12, n(B)=9, n(A∩B)=5. n(A∪B)=...",
+          "jawaban": "16",
+          "pengecof": ["21", "11", "26"],
+          "langkah": "n(A∪B) = 12 + 9 - 5 = 16."
+        }
+      ]
+    }
+  ]
+}

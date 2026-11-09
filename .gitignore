@@ -1,0 +1,53 @@
+# Unity generated
+/[L|l]ibrary/
+/[T|t]emp/
+/[O|o]bj/
+/[B|b]uild/
+/[B|b]uilds/
+/[L|l]ogs/
+/[U|u]ser[S|s]ettings/
+/[M|m]emoryCaptures/
+/[R|r]ecordings/
+*BurstDebugInformation_DoNotShip/
+
+# Visual Studio / VS Code / JetBrains
+.vs/
+.vscode/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.opendb
+*.VC.db
+
+# Build Artifacts & Large Archives
+*.apk
+*.aab
+*.tgz
+*.zip
+*.unitypackage
+
+# Flutter / Dart
+mathlfix_dart/.dart_tool/
+mathlfix_dart/build/
+mathlfix_dart/android/.gradle/
+mathlfix_dart/android/local.properties
+mathlfix_dart/android/app/build/
+mathlfix_dart/.flutter-plugins
+mathlfix_dart/.flutter-plugins-dependencies
+
+# Python / Local scratch
+fix2.py
+__pycache__/
+*.pyc
+
+# OS generated
+.DS_Store
+Thumbs.db

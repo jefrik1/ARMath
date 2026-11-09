@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QCARConfig>
+  <Tracking>
+    <ImageTarget name="Pecahan" size="1.000000 0.750000" />
+    <ImageTarget name="Kerucut" size="1.000000 0.750000" />
+    <ImageTarget name="Limas_SegiEnam" size="1.000000 1.000000" />
+    <ImageTarget name="PDasar" size="1.000000 1.313673" />
+    <ImageTarget name="PData" size="1.000000 1.000000" />
+    <ImageTarget name="segilima" size="1.000000 0.796875" />
+    <ImageTarget name="prisma_segitiga_marker" size="1.000000 0.800955" />
+    <ImageTarget name="limas_segitiga_marker" size="1.000000 0.800955" />
+    <ImageTarget name="kubus_marker" size="1.000000 0.800955" />
+    <ImageTarget name="balok_marker" size="1.000000 0.800955" />
+    <ImageTarget name="bola_marker" size="1.000000 0.799525" />
+    <ImageTarget name="limas_segiempat_marker" size="1.000000 0.800955" />
+    <ImageTarget name="tabung_marker" size="1.000000 0.800955" />
+  </Tracking>
+</QCARConfig>

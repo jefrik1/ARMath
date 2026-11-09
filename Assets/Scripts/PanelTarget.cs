@@ -1,0 +1,19 @@
+public enum PanelTarget
+{
+    None,
+    Start,
+    Soal,
+    PengolahanData,
+    PerhitunganDasar,
+    Materi,
+    Materi_PengolahanData,
+    Materi_PerhitunganDasar,
+    MateriPecahan,
+    MateriModus,
+    MateriMedian,
+    MateriRataRata,       
+    MateriPenjumlahan,
+    MateriPengurangan,
+    MateriPerkalian,
+    MateriPembagian
+}
