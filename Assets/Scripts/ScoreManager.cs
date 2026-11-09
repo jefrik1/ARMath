@@ -34,11 +34,15 @@ public class ScoreManager : MonoBehaviour
 
     void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        GameObject scoreTextObj = GameObject.FindWithTag("ScoreText");
+        GameObject scoreTextObj = null;
+        try { scoreTextObj = GameObject.FindWithTag("ScoreText"); } catch { }
+        if (scoreTextObj == null) scoreTextObj = GameObject.Find("ScoreText");
         if (scoreTextObj != null)
             scoreText = scoreTextObj.GetComponent<TMP_Text>();
 
-        GameObject highScoreTextObj = GameObject.FindWithTag("HighScoreText");
+        GameObject highScoreTextObj = null;
+        try { highScoreTextObj = GameObject.FindWithTag("HighScoreText"); } catch { }
+        if (highScoreTextObj == null) highScoreTextObj = GameObject.Find("HighScoreText");
         if (highScoreTextObj != null)
             highScoreText = highScoreTextObj.GetComponent<TMP_Text>();
 

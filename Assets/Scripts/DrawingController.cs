@@ -38,6 +38,8 @@ public class DrawingController : MonoBehaviour
 
     void Start()
     {
+        StitchUIThemeApplier.EnhanceScratchpad(this);
+
         if (drawingPanel != null)
             drawingPanel.SetActive(false);
 
@@ -72,7 +74,7 @@ public class DrawingController : MonoBehaviour
     }
 
     /// <summary>
-    /// Buat 3 tombol pill warna cepat (Hitam, Biru, Merah) secara dinamis di drawingPanel.
+    /// Buat tombol pill warna cepat (Hitam, Biru, Merah, Hijau, Kuning) Stitch di drawingPanel.
     /// </summary>
     private void SetupQuickColorButtons()
     {
@@ -84,20 +86,22 @@ public class DrawingController : MonoBehaviour
         container.transform.SetParent(drawingPanel.transform, false);
 
         RectTransform crt = container.GetComponent<RectTransform>();
-        crt.anchorMin = new Vector2(0.05f, 0.92f);
-        crt.anchorMax = new Vector2(0.45f, 0.98f);
+        crt.anchorMin = new Vector2(0.04f, 0.92f);
+        crt.anchorMax = new Vector2(0.60f, 0.98f);
         crt.offsetMin = Vector2.zero;
         crt.offsetMax = Vector2.zero;
 
         HorizontalLayoutGroup hlg = container.GetComponent<HorizontalLayoutGroup>();
-        hlg.spacing = 10;
+        hlg.spacing = 8;
         hlg.childAlignment = TextAnchor.MiddleLeft;
         hlg.childControlWidth = false;
         hlg.childControlHeight = false;
 
-        CreateColorPill(container.transform, "Hitam", Color.black, () => SetColorHitam());
-        CreateColorPill(container.transform, "Biru", new Color(0.12f, 0.45f, 0.95f), () => SetColorBiru());
-        CreateColorPill(container.transform, "Merah", new Color(0.92f, 0.22f, 0.22f), () => SetColorMerah());
+        CreateColorPill(container.transform, "Hitam", new Color(0.12f, 0.16f, 0.23f), () => SetColorHitam());
+        CreateColorPill(container.transform, "Biru", StitchUIThemeApplier.PrimaryBlue, () => SetColorBiru());
+        CreateColorPill(container.transform, "Merah", StitchUIThemeApplier.CoralRed, () => SetColorMerah());
+        CreateColorPill(container.transform, "Hijau", StitchUIThemeApplier.SecondaryEmerald, () => SetDrawColor(StitchUIThemeApplier.SecondaryEmerald));
+        CreateColorPill(container.transform, "Kuning", StitchUIThemeApplier.TertiaryAmber, () => SetDrawColor(StitchUIThemeApplier.TertiaryAmber));
     }
 
     private void CreateColorPill(Transform parent, string label, Color color, UnityEngine.Events.UnityAction action)
@@ -106,10 +110,11 @@ public class DrawingController : MonoBehaviour
         pill.transform.SetParent(parent, false);
 
         RectTransform rt = pill.GetComponent<RectTransform>();
-        rt.sizeDelta = new Vector2(60, 32);
+        rt.sizeDelta = new Vector2(56, 30);
 
         Image img = pill.GetComponent<Image>();
-        img.color = color;
+        img.sprite = StitchUIThemeApplier.GetPillSprite(color, Color.white, 2f);
+        img.type = Image.Type.Sliced;
 
         Button btn = pill.GetComponent<Button>();
         btn.onClick.AddListener(action);
@@ -118,7 +123,8 @@ public class DrawingController : MonoBehaviour
         textGo.transform.SetParent(pill.transform, false);
         TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
         tmp.text = label;
-        tmp.fontSize = 14;
+        tmp.fontSize = 12;
+        tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Center;
         tmp.color = Color.white;
 
@@ -129,9 +135,9 @@ public class DrawingController : MonoBehaviour
         textRt.offsetMax = Vector2.zero;
     }
 
-    public void SetColorHitam() => SetDrawColor(Color.black);
-    public void SetColorBiru() => SetDrawColor(new Color(0.12f, 0.45f, 0.95f));
-    public void SetColorMerah() => SetDrawColor(new Color(0.92f, 0.22f, 0.22f));
+    public void SetColorHitam() => SetDrawColor(new Color(0.12f, 0.16f, 0.23f));
+    public void SetColorBiru() => SetDrawColor(StitchUIThemeApplier.PrimaryBlue);
+    public void SetColorMerah() => SetDrawColor(StitchUIThemeApplier.CoralRed);
 
     public void SetDrawColor(Color c)
     {
@@ -241,13 +247,23 @@ public class DrawingController : MonoBehaviour
     {
         MathSoundFX.PlayClick();
         if (texture == null) return;
-        Color32[] pixels = texture.GetPixels32();
-        Color32 white = new Color32(255, 255, 255, 255);
-        for (int i = 0; i < pixels.Length; i++)
-            pixels[i] = white;
+        int w = texture.width;
+        int h = texture.height;
+        Color32[] pixels = new Color32[w * h];
+        Color32 paperColor = new Color32(251, 253, 255, 255); // #FBFDFF
+        Color32 gridLineColor = new Color32(191, 219, 254, 110); // subtle blue grid line #BFDBFE
+
+        for (int y = 0; y < h; y++)
+        {
+            for (int x = 0; x < w; x++)
+            {
+                bool isGrid = (x % 24 == 0 || y % 24 == 0);
+                pixels[y * w + x] = isGrid ? gridLineColor : paperColor;
+            }
+        }
         texture.SetPixels32(pixels);
         texture.Apply();
-        SetStatus("Papan coretan bersih.");
+        SetStatus("Buku kotak coretan bersih.");
     }
 
     public void OpenCanvas()

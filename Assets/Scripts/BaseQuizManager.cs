@@ -44,8 +44,98 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         if (undoButton != null) undoButton.onClick.AddListener(UndoJawaban);
         if (ScoreManager.instance != null) ScoreManager.instance.ResetScore();
 
+        StitchUIThemeApplier.EnhanceQuizHUD(this);
+        SetupStitchTopHUD();
         SetupHintButton();
+        SetupScratchpadButton();
         GenerateRandomQuestion();
+        ResetAnswerState();
+    }
+
+    /// <summary>
+    /// Injeksi / penyesuaian Top HUD Stitch (Kembali, 3 Hearts, Skor, High Score).
+    /// </summary>
+    protected void SetupStitchTopHUD()
+    {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) canvas = FindObjectOfType<Canvas>();
+        if (canvas == null) return;
+
+        Transform existing = canvas.transform.Find("StitchQuizTopHUD");
+        if (existing != null) return;
+
+        GameObject topHudGo = new GameObject("StitchQuizTopHUD", typeof(RectTransform), typeof(Image));
+        topHudGo.transform.SetParent(canvas.transform, false);
+
+        RectTransform rt = topHudGo.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0.04f, 0.91f);
+        rt.anchorMax = new Vector2(0.96f, 0.98f);
+        rt.offsetMin = Vector2.zero;
+        rt.offsetMax = Vector2.zero;
+
+        Image img = topHudGo.GetComponent<Image>();
+        StitchUIThemeApplier.ApplyHudBarStyle(img);
+
+        // Tombol Kembali
+        GameObject backBtnGo = new GameObject("Btn_Kembali", typeof(RectTransform), typeof(Image), typeof(Button));
+        backBtnGo.transform.SetParent(topHudGo.transform, false);
+        RectTransform brt = backBtnGo.GetComponent<RectTransform>();
+        brt.anchorMin = new Vector2(0.02f, 0.15f);
+        brt.anchorMax = new Vector2(0.24f, 0.85f);
+        brt.offsetMin = Vector2.zero;
+        brt.offsetMax = Vector2.zero;
+
+        Image bImg = backBtnGo.GetComponent<Image>();
+        bImg.sprite = StitchUIThemeApplier.GetPillSprite(StitchUIThemeApplier.SurfaceLowest, StitchUIThemeApplier.PrimaryBlueLight, 1.5f);
+        bImg.type = Image.Type.Sliced;
+
+        GameObject bTextGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        bTextGo.transform.SetParent(backBtnGo.transform, false);
+        RectTransform btRt = bTextGo.GetComponent<RectTransform>();
+        btRt.anchorMin = Vector2.zero;
+        btRt.anchorMax = Vector2.one;
+        btRt.offsetMin = Vector2.zero;
+        btRt.offsetMax = Vector2.zero;
+        TextMeshProUGUI bTmp = bTextGo.GetComponent<TextMeshProUGUI>();
+        bTmp.text = "← Menu";
+        bTmp.fontSize = 15;
+        bTmp.fontStyle = FontStyles.Bold;
+        bTmp.alignment = TextAlignmentOptions.Center;
+        bTmp.color = StitchUIThemeApplier.OnSurface;
+
+        Button backBtn = backBtnGo.GetComponent<Button>();
+        backBtn.onClick.AddListener(() =>
+        {
+            MathSoundFX.PlayClick();
+            UnityEngine.SceneManagement.SceneManager.LoadScene("MainMenu");
+        });
+
+        // Skor Pill
+        GameObject scoreGo = new GameObject("ScorePill", typeof(RectTransform), typeof(Image));
+        scoreGo.transform.SetParent(topHudGo.transform, false);
+        RectTransform srt = scoreGo.GetComponent<RectTransform>();
+        srt.anchorMin = new Vector2(0.70f, 0.15f);
+        srt.anchorMax = new Vector2(0.98f, 0.85f);
+        srt.offsetMin = Vector2.zero;
+        srt.offsetMax = Vector2.zero;
+
+        Image sImg = scoreGo.GetComponent<Image>();
+        sImg.sprite = StitchUIThemeApplier.GetPillSprite(StitchUIThemeApplier.TertiaryAmberLight, StitchUIThemeApplier.TertiaryAmber, 1.5f);
+        sImg.type = Image.Type.Sliced;
+
+        GameObject sTextGo = new GameObject("ScoreText", typeof(RectTransform), typeof(TextMeshProUGUI));
+        sTextGo.transform.SetParent(scoreGo.transform, false);
+        RectTransform stRt = sTextGo.GetComponent<RectTransform>();
+        stRt.anchorMin = Vector2.zero;
+        stRt.anchorMax = Vector2.one;
+        stRt.offsetMin = Vector2.zero;
+        stRt.offsetMax = Vector2.zero;
+        TextMeshProUGUI sTmp = sTextGo.GetComponent<TextMeshProUGUI>();
+        sTmp.text = "★ Skor: 0";
+        sTmp.fontSize = 15;
+        sTmp.fontStyle = FontStyles.Bold;
+        sTmp.alignment = TextAlignmentOptions.Center;
+        sTmp.color = StitchUIThemeApplier.TertiaryContainer;
     }
 
     /// <summary>
@@ -78,20 +168,21 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         hintRt.anchorMin = checkRt.anchorMin;
         hintRt.anchorMax = checkRt.anchorMax;
         hintRt.pivot = checkRt.pivot;
-        hintRt.sizeDelta = new Vector2(checkRt.sizeDelta.x * 0.9f, checkRt.sizeDelta.y);
-        hintRt.anchoredPosition = checkRt.anchoredPosition + new Vector2(checkRt.sizeDelta.x + 20f, 0f);
+        hintRt.sizeDelta = new Vector2(checkRt.sizeDelta.x * 0.85f, checkRt.sizeDelta.y);
+        hintRt.anchoredPosition = checkRt.anchoredPosition + new Vector2(checkRt.sizeDelta.x + 15f, 0f);
 
         Image img = hintGo.GetComponent<Image>();
-        img.color = new Color(0.95f, 0.72f, 0.12f); // Warna Emas / Kuning terang
+        img.sprite = StitchUIThemeApplier.GetPillSprite(StitchUIThemeApplier.TertiaryAmberLight, StitchUIThemeApplier.TertiaryAmber, 1.5f);
+        img.type = Image.Type.Sliced;
 
         GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
         textGo.transform.SetParent(hintGo.transform, false);
         TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
         tmp.text = "💡 Petunjuk";
-        tmp.fontSize = 20;
+        tmp.fontSize = 18;
         tmp.fontStyle = FontStyles.Bold;
         tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
+        tmp.color = StitchUIThemeApplier.TertiaryContainer;
 
         RectTransform textRt = textGo.GetComponent<RectTransform>();
         textRt.anchorMin = Vector2.zero;
@@ -101,6 +192,58 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
 
         hintButton = hintGo.GetComponent<Button>();
         hintButton.onClick.AddListener(TampilkanPetunjuk);
+    }
+
+    /// <summary>
+    /// Buat tombol "✏️ Coretan" Stitch secara dinamis untuk membuka Scratchpad DrawingController.
+    /// </summary>
+    protected void SetupScratchpadButton()
+    {
+        if (checkButton == null) return;
+        Transform parent = checkButton.transform.parent;
+        if (parent == null) return;
+
+        Transform existing = parent.Find("Btn_Coretan");
+        if (existing != null) return;
+
+        GameObject drawBtnGo = new GameObject("Btn_Coretan", typeof(RectTransform), typeof(Image), typeof(Button));
+        drawBtnGo.transform.SetParent(parent, false);
+
+        RectTransform checkRt = checkButton.GetComponent<RectTransform>();
+        RectTransform drawRt = drawBtnGo.GetComponent<RectTransform>();
+
+        drawRt.anchorMin = checkRt.anchorMin;
+        drawRt.anchorMax = checkRt.anchorMax;
+        drawRt.pivot = checkRt.pivot;
+        drawRt.sizeDelta = new Vector2(checkRt.sizeDelta.x * 0.85f, checkRt.sizeDelta.y);
+        drawRt.anchoredPosition = checkRt.anchoredPosition - new Vector2(checkRt.sizeDelta.x + 15f, 0f);
+
+        Image img = drawBtnGo.GetComponent<Image>();
+        img.sprite = StitchUIThemeApplier.GetPillSprite(StitchUIThemeApplier.PrimaryBlueSubtle, StitchUIThemeApplier.PrimaryBlue, 1.5f);
+        img.type = Image.Type.Sliced;
+
+        GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textGo.transform.SetParent(drawBtnGo.transform, false);
+        TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
+        tmp.text = "✏️ Coretan";
+        tmp.fontSize = 18;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = StitchUIThemeApplier.PrimaryBlueDeep;
+
+        RectTransform textRt = textGo.GetComponent<RectTransform>();
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = Vector2.zero;
+        textRt.offsetMax = Vector2.zero;
+
+        Button drawBtn = drawBtnGo.GetComponent<Button>();
+        drawBtn.onClick.AddListener(() =>
+        {
+            MathSoundFX.PlayClick();
+            DrawingController dc = FindObjectOfType<DrawingController>();
+            if (dc != null) dc.OpenCanvas();
+        });
     }
 
     /// <summary>
@@ -168,15 +311,36 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         return true;
     }
 
+    private void UpdateStateD2()
+    {
+        if (answerText != null)
+        {
+            answerText.text = $"✓ Jawaban Terpilih: <b>{playerAnswerValue}</b> (Objek {playerAnswerLabel} Terkunci!)";
+            answerText.color = Color.white;
+            Transform strip = answerText.transform.parent;
+            if (strip != null)
+            {
+                Image stripImg = strip.GetComponent<Image>();
+                if (stripImg != null)
+                    StitchUIThemeApplier.ApplyCardStyle(stripImg, StitchUIThemeApplier.SecondaryEmerald, StitchUIThemeApplier.SecondaryEmeraldDark, 16f, 2f);
+            }
+        }
+        if (checkButton != null)
+        {
+            checkButton.interactable = true;
+            TMP_Text btnTxt = checkButton.GetComponentInChildren<TMP_Text>();
+            if (btnTxt != null) btnTxt.text = $"Cek Jawaban ({playerAnswerValue})";
+        }
+        if (undoButton != null) undoButton.gameObject.SetActive(true);
+    }
+
     public void SetJawabanPilihan(string pilihan, int nilai, GameObject objekYangDipilih)
     {
         MathSoundFX.PlayClick();
         playerAnswerLabel = pilihan;
         playerAnswerValue = nilai.ToString();
         objekTerpilih = objekYangDipilih;
-        answerText.text = "Jawaban Anda: " + nilai;
-        checkButton.interactable = true;
-        undoButton.gameObject.SetActive(true);
+        UpdateStateD2();
     }
 
     public void SetJawabanPilihan(string pilihan, string nilai, GameObject objekYangDipilih)
@@ -185,9 +349,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         playerAnswerLabel = pilihan;
         playerAnswerValue = nilai != null ? nilai : "";
         objekTerpilih = objekYangDipilih;
-        answerText.text = "Jawaban Anda: " + nilai;
-        checkButton.interactable = true;
-        undoButton.gameObject.SetActive(true);
+        UpdateStateD2();
     }
 
     public void SetJawabanPilihan(string pilihan, float nilai, GameObject objekYangDipilih)
@@ -196,9 +358,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         playerAnswerLabel = pilihan;
         playerAnswerValue = nilai.ToString("F1");
         objekTerpilih = objekYangDipilih;
-        answerText.text = "Jawaban Anda: " + nilai.ToString("F1");
-        checkButton.interactable = true;
-        undoButton.gameObject.SetActive(true);
+        UpdateStateD2();
     }
 
     public void UndoJawaban()
@@ -213,8 +373,24 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         playerAnswerLabel = "";
         playerAnswerValue = "";
         objekTerpilih = null;
-        if (answerText != null) answerText.text = "Jawaban Anda: -";
-        if (checkButton != null) checkButton.interactable = false;
+        if (answerText != null)
+        {
+            answerText.text = "🚶 Berjalanlah mendekati objek jawaban 3D lalu sentuh untuk memilih!";
+            answerText.color = StitchUIThemeApplier.PrimaryBlueDeep;
+            Transform strip = answerText.transform.parent;
+            if (strip != null)
+            {
+                Image stripImg = strip.GetComponent<Image>();
+                if (stripImg != null)
+                    StitchUIThemeApplier.ApplyCardStyle(stripImg, StitchUIThemeApplier.SurfaceLow, StitchUIThemeApplier.PrimaryBlueLight, 16f, 1f);
+            }
+        }
+        if (checkButton != null)
+        {
+            checkButton.interactable = false;
+            TMP_Text btnTxt = checkButton.GetComponentInChildren<TMP_Text>();
+            if (btnTxt != null) btnTxt.text = "Dekati Objek Dulu";
+        }
         if (undoButton != null) undoButton.gameObject.SetActive(false);
     }
 

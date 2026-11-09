@@ -28,10 +28,11 @@ public class PopupManager : MonoBehaviour
 
     private void Start()
     {
+        StitchUIThemeApplier.EnhanceModals(this);
         HideAllPanels();
     }
 
-    // Fungsi ini sekarang hanya menangani "Game Over" dan "Pilih Jawaban Dulu"
+    // Fungsi ini menangani "Game Over" dan "Pilih Jawaban Dulu"
     public void ShowPopup(string message, bool isCorrect, bool isGameOver = false)
     {
         HideAllPanels();
@@ -40,7 +41,8 @@ public class PopupManager : MonoBehaviour
         {
             if (panelGameOver != null)
             {
-                if (textGameOver != null) textGameOver.text = message;
+                if (textGameOver != null)
+                    textGameOver.text = $"<color=#EF4444><b>GAME OVER</b></color>\n<size=18>Nyawa Habis! Jangan Menyerah, Coba Lagi! 💪</size>\n\n{message}";
                 panelGameOver.SetActive(true);
                 Time.timeScale = 0f;
             }
@@ -49,6 +51,7 @@ public class PopupManager : MonoBehaviour
                 restartButton.gameObject.SetActive(true);
                 restartButton.onClick.RemoveAllListeners();
                 restartButton.onClick.AddListener(RestartGame);
+                StitchUIThemeApplier.ApplyTactileButtonStyle(restartButton, StitchUIThemeApplier.SecondaryEmerald, StitchUIThemeApplier.SecondaryEmeraldDark, Color.white);
             }
         }
         else if (isCorrect)
@@ -66,34 +69,37 @@ public class PopupManager : MonoBehaviour
         }
     }
 
-    // --- UBAH FUNGSI INI ---
     /// <summary>
-    /// Menampilkan panel "Benar" dengan pesan konfirmasi.
-    /// Panel ini akan auto-hide.
+    /// Menampilkan panel "Benar" dengan format Stitch gamified celebratory modal.
     /// </summary>
     public void ShowPopupBenar(string pesanKonfirmasi)
     {
-
         HideAllPanels();
         if (panelBenar != null)
         {
-            if (textKonfirmasiBenar != null) textKonfirmasiBenar.text = pesanKonfirmasi;
+            if (textKonfirmasiBenar != null)
+            {
+                textKonfirmasiBenar.text = $"<color=#22C55E><b>🎉 JAWABAN TEPAT!</b></color>\n" +
+                                           $"<color=#15803D><size=18>Hebat, Matematikawan Cilik! +50 XP</size></color>\n\n" +
+                                           $"<color=#111C2D>{pesanKonfirmasi}</color>";
+            }
             panelBenar.SetActive(true);
         }
-        Invoke("HideAllPanels", 2f);
+        Invoke("HideAllPanels", 2.5f);
     }
-    // ---------------------------------
 
     public void ShowPembahasan(string message)
     {
-
         HideAllPanels();
         if (panelSalah != null)
         {
             panelSalah.SetActive(true);
             if (groupInfoSalah != null) groupInfoSalah.SetActive(false);
             if (groupInfoPembahasan != null) groupInfoPembahasan.SetActive(true);
-            if (textPembahasan != null) textPembahasan.text = message;
+            if (textPembahasan != null)
+            {
+                textPembahasan.text = $"<color=#246EA6><b>📘 PEMBAHASAN LANGKAH DEMI LANGKAH</b></color>\n\n{message}";
+            }
         }
     }
 

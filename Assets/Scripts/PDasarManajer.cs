@@ -43,6 +43,16 @@ public class PDasarManajer : MonoBehaviour, IQuizManager
 
     void Start()
     {
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) canvas = FindObjectOfType<Canvas>();
+        StitchUIThemeApplier.SetupMateriTopBar(canvas, "Materi AR: Perhitungan Dasar");
+
+        if (textJudul != null && textJudul.transform.parent != null)
+        {
+            Image pImg = textJudul.transform.parent.GetComponent<Image>();
+            if (pImg != null) StitchUIThemeApplier.ApplyCardStyle(pImg, StitchUIThemeApplier.SurfaceHud, StitchUIThemeApplier.PrimaryBlueLight, 22f, 2f);
+        }
+
         InisialisasiMateri();
         SetupTombol();
         TampilkanMateri(0);

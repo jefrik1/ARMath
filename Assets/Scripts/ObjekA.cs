@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+using UnityEngine;
 using TMPro;
 
 /// <summary>
-/// Objek pilihan jawaban yang bisa disentuh/Trigger oleh player.
-/// Setup satu kali saat spawn, lalu panggil quiz manager saat player menyentuhnya.
+/// Objek pilihan jawaban 3D dalam ruang Augmented Reality (Walk-to-Answer Mechanic).
+/// Menampilkan teks pilihan dengan styling Stitch, indikator jarak real-time ("1.8 m"),
+/// dan mendeteksi kedekatan fisik pemain via OnTriggerEnter (atau tap layar).
 /// </summary>
 public class ObjekA : MonoBehaviour
 {
@@ -19,6 +20,39 @@ public class ObjekA : MonoBehaviour
     private bool menggunakanString;
     private bool menggunakanFloat;
 
+    private Transform camTransform;
+    private bool isPickedUp = false;
+
+    private void Start()
+    {
+        if (Camera.main != null)
+            camTransform = Camera.main.transform;
+
+        // Pastikan objek selalu menghadap kamera (Billboard)
+        if (GetComponent<LookAtCamera>() == null)
+            gameObject.AddComponent<LookAtCamera>();
+    }
+
+    private void Update()
+    {
+        if (camTransform == null && Camera.main != null)
+            camTransform = Camera.main.transform;
+
+        if (camTransform != null && teksPilihan != null)
+        {
+            float dist = Vector3.Distance(transform.position, camTransform.position);
+            string valStr = menggunakanInt ? nilaiInt.ToString() : (menggunakanFloat ? nilaiFloat.ToString("F1") : nilaiString);
+
+            string proximityBadge = isPickedUp
+                ? "<color=#22C55E>✓ Terkunci!</color>"
+                : (dist < 1.3f
+                    ? $"<color=#22C55E>{dist:F1}m • Sangat Dekat!</color>"
+                    : $"<color=#246EA6>{dist:F1}m</color>");
+
+            teksPilihan.text = $"<b>{pilihanHuruf}. {valStr}</b>\n<size=11>{proximityBadge}</size>";
+        }
+    }
+
     /// Setup untuk kuis berbasis angka (int)
     public void Setup(string huruf, int nilai, IQuizManager manager)
     {
@@ -28,9 +62,10 @@ public class ObjekA : MonoBehaviour
         menggunakanString = false;
         menggunakanFloat = false;
         quizManager = manager;
+        isPickedUp = false;
 
         if (teksPilihan != null)
-            teksPilihan.text = nilaiInt.ToString();
+            teksPilihan.text = $"{huruf}. {nilaiInt}";
     }
 
     /// Setup untuk kuis berbasis teks/string (pecahan)
@@ -42,9 +77,10 @@ public class ObjekA : MonoBehaviour
         menggunakanString = true;
         menggunakanFloat = false;
         quizManager = manager;
+        isPickedUp = false;
 
         if (teksPilihan != null)
-            teksPilihan.text = nilaiString;
+            teksPilihan.text = $"{huruf}. {nilaiString}";
     }
 
     /// Setup untuk kuis berbasis desimal (float / bangun ruang)
@@ -56,21 +92,38 @@ public class ObjekA : MonoBehaviour
         menggunakanString = false;
         menggunakanFloat = true;
         quizManager = manager;
+        isPickedUp = false;
 
         if (teksPilihan != null)
-            teksPilihan.text = nilaiFloat.ToString("F1");
+            teksPilihan.text = $"{huruf}. {nilaiFloat:F1}";
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player") && quizManager != null)
+        // Deteksi tabrakan fisik dengan Player atau ARCamera saat siswa berjalan mendekati objek
+        if ((other.CompareTag("Player") || other.CompareTag("MainCamera") || other.GetComponent<Camera>() != null) && quizManager != null)
         {
-            if (menggunakanInt)
-                quizManager.SetJawabanPilihan(pilihanHuruf, nilaiInt, this.gameObject);
-            else if (menggunakanString)
-                quizManager.SetJawabanPilihan(pilihanHuruf, nilaiString, this.gameObject);
-            else if (menggunakanFloat)
-                quizManager.SetJawabanPilihan(pilihanHuruf, nilaiFloat, this.gameObject);
+            TriggerSelection();
         }
+    }
+
+    private void OnMouseDown()
+    {
+        // Fallback sentuhan langsung di layar jika siswa tidak dapat berjalan jauh
+        TriggerSelection();
+    }
+
+    private void TriggerSelection()
+    {
+        if (quizManager == null) return;
+        isPickedUp = true;
+        MathSoundFX.PlayClick();
+
+        if (menggunakanInt)
+            quizManager.SetJawabanPilihan(pilihanHuruf, nilaiInt, this.gameObject);
+        else if (menggunakanString)
+            quizManager.SetJawabanPilihan(pilihanHuruf, nilaiString, this.gameObject);
+        else if (menggunakanFloat)
+            quizManager.SetJawabanPilihan(pilihanHuruf, nilaiFloat, this.gameObject);
     }
 }

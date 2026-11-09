@@ -25,6 +25,14 @@ public class UIBangunRuang : MonoBehaviour
         SembunyikanSemua();
     }
 
+    private void Start()
+    {
+        StitchUIThemeApplier.EnhanceMateriHUD(this);
+        Canvas canvas = GetComponentInParent<Canvas>();
+        if (canvas == null) canvas = FindObjectOfType<Canvas>();
+        StitchUIThemeApplier.SetupMateriTopBar(canvas, "Materi AR: Bangun Ruang 3D");
+    }
+
     private string GetNamaBangun(JenisBangunRuang jenis)
     {
         switch (jenis)
