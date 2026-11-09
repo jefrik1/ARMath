@@ -1,6 +1,10 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Kuis menentukan median dari kumpulan data sesuai kurikulum Matematika SD
+/// dengan 50% soal cerita kontekstual dan sistem petunjuk.
+/// </summary>
 public class MedianManager : BaseQuizManager<int>
 {
     public override void GenerateRandomQuestion()
@@ -47,12 +51,33 @@ public class MedianManager : BaseQuizManager<int>
         int posTengah = (jumlahData + 1) / 2;
         int jawaban = sortedNumbers[posTengah - 1];
 
-        soalSaatIni = $"Tentukan median dari kumpulan data berikut:\n{rawString}";
+        // 50% Soal Cerita Kontekstual vs 50% Numerik
+        bool isSoalCerita = Random.value < 0.5f;
+        string nama = GradeLevelConfig.GetRandomStudentName();
+
+        if (isSoalCerita)
+        {
+            if (phase == GradePhase.FaseA || phase == GradePhase.FaseB)
+            {
+                soalSaatIni = $"{nama} mencatat banyak kelereng yang dimiliki {jumlahData} orang temannya:\n{rawString}\nBerapa nilai tengah (median) data kelereng tersebut?";
+            }
+            else
+            {
+                soalSaatIni = $"Data berat badan (kg) dari {jumlahData} siswa adalah sebagai berikut:\n{rawString}\nTentukan nilai median dari data tersebut!";
+            }
+        }
+        else
+        {
+            soalSaatIni = $"Tentukan median dari kumpulan data berikut:\n{rawString}";
+        }
+
         langkahPenyelesaian = "Langkah mencari Median:\n" +
             $"1. Urutkan data dari terkecil ke terbesar:\n   {sortedString}\n" +
             $"2. Karena jumlah data n = {jumlahData} (ganjil), median adalah data urutan ke-(n+1)/2 = ke-{posTengah}.\n" +
-            $"3. Data ke-{posTengah} adalah {jawaban}.\n" +
+            $"3. Nilai pada urutan ke-{posTengah} adalah {jawaban}.\n" +
             $"Maka, Median = {jawaban}.";
+
+        petunjukSoal = $"Langkah 1: Urutkan dulu semua data dari yang paling kecil.\nLangkah 2: Ambil angka yang berada tepat di tengah (urutan ke-{posTengah}).";
 
         questionText.text = soalSaatIni;
         BuatPilihan(jawaban);
@@ -76,7 +101,6 @@ public class MedianManager : BaseQuizManager<int>
             if (pengecoh >= 0 && pengecoh != jawabanBenar && !pilihan.Contains(pengecoh))
                 pilihan.Add(pengecoh);
         }
-        // Fallback jika pengecoh kurang
         while (pilihan.Count < 11)
         {
             int fallback = Random.Range(1, 100);

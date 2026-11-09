@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 /// <summary>
 /// Base class untuk seluruh quiz. Semua logika UI state, health, score,
-/// popup, dan destroy pilihan sudah di sini.
+/// popup, hint/petunjuk, dan destroy pilihan sudah di sini.
 /// Subclass hanya override: GenerateRandomQuestion() dan IsAnswerCorrect().
 /// </summary>
 public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
@@ -21,47 +21,110 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
     public HealthManager healthManager;
     public ItemSpawner itemSpawner;
 
-    // huruf label jawaban benar (A, B, ...)
+    // Huruf label jawaban benar (A, B, ...)
     public string correctAnswerLabel;
     public string playerAnswerLabel;
     public string playerAnswerValue;
     public string soalSaatIni;
     public string langkahPenyelesaian;
+    public string petunjukSoal; // Scaffolding petunjuk langkah awal
 
-    // nilai jawaban benar sebagai string (untuk ditampilkan di pembahasan)
+    // Nilai jawaban benar sebagai string (untuk ditampilkan di pembahasan)
     public string correctAnswerValue;
 
     protected List<GameObject> objekPilihanAktif = new List<GameObject>();
     protected GameObject objekTerpilih;
 
     private string[] huruf = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
+    private Button hintButton;
 
     protected virtual void Start()
     {
-        checkButton.onClick.AddListener(CekJawaban);
-        undoButton.onClick.AddListener(UndoJawaban);
+        if (checkButton != null) checkButton.onClick.AddListener(CekJawaban);
+        if (undoButton != null) undoButton.onClick.AddListener(UndoJawaban);
         if (ScoreManager.instance != null) ScoreManager.instance.ResetScore();
+
+        SetupHintButton();
         GenerateRandomQuestion();
     }
 
-    /// <summary>Subclasses: generate soal baru + spawn pilihan.</summary>
+    /// <summary>
+    /// Buat tombol "💡 Petunjuk" secara dinamis di samping checkButton jika belum ada.
+    /// </summary>
+    protected void SetupHintButton()
+    {
+        if (checkButton == null) return;
+        Transform parent = checkButton.transform.parent;
+        if (parent == null) return;
+
+        Transform existing = parent.Find("Btn_Petunjuk");
+        if (existing != null)
+        {
+            hintButton = existing.GetComponent<Button>();
+            if (hintButton != null)
+            {
+                hintButton.onClick.RemoveAllListeners();
+                hintButton.onClick.AddListener(TampilkanPetunjuk);
+            }
+            return;
+        }
+
+        GameObject hintGo = new GameObject("Btn_Petunjuk", typeof(RectTransform), typeof(Image), typeof(Button));
+        hintGo.transform.SetParent(parent, false);
+
+        RectTransform checkRt = checkButton.GetComponent<RectTransform>();
+        RectTransform hintRt = hintGo.GetComponent<RectTransform>();
+
+        hintRt.anchorMin = checkRt.anchorMin;
+        hintRt.anchorMax = checkRt.anchorMax;
+        hintRt.pivot = checkRt.pivot;
+        hintRt.sizeDelta = new Vector2(checkRt.sizeDelta.x * 0.9f, checkRt.sizeDelta.y);
+        hintRt.anchoredPosition = checkRt.anchoredPosition + new Vector2(checkRt.sizeDelta.x + 20f, 0f);
+
+        Image img = hintGo.GetComponent<Image>();
+        img.color = new Color(0.95f, 0.72f, 0.12f); // Warna Emas / Kuning terang
+
+        GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textGo.transform.SetParent(hintGo.transform, false);
+        TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
+        tmp.text = "💡 Petunjuk";
+        tmp.fontSize = 20;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = Color.white;
+
+        RectTransform textRt = textGo.GetComponent<RectTransform>();
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = Vector2.zero;
+        textRt.offsetMax = Vector2.zero;
+
+        hintButton = hintGo.GetComponent<Button>();
+        hintButton.onClick.AddListener(TampilkanPetunjuk);
+    }
+
+    /// <summary>
+    /// Tampilkan petunjuk langkah awal tanpa mengurangi nyawa (scaffolding).
+    /// </summary>
+    public void TampilkanPetunjuk()
+    {
+        MathSoundFX.PlayClick();
+        string isiPetunjuk = !string.IsNullOrEmpty(petunjukSoal)
+            ? petunjukSoal
+            : (!string.IsNullOrEmpty(langkahPenyelesaian) ? langkahPenyelesaian : "Perhatikan rumus atau konsep dasar materi ini.");
+
+        if (popupManager != null)
+        {
+            popupManager.ShowPembahasan("💡 PETUNJUK PENYELESAIAN:\n\n" + isiPetunjuk);
+        }
+    }
+
     public abstract void GenerateRandomQuestion();
 
-    /// <summary>Subclasses: bandingkan jawaban pemain vs jawaban benar.
-    /// Jawaban benar diambil dari correctAnswerValue (sudah di-set saat generate soal).
-    /// Override dan return true jika jawaban pemain sesuai.</summary>
     public abstract bool IsAnswerCorrect(string playerAnswer);
 
-    /// <summary>
-    /// Convert jawaban benar ke string untuk ditampilkan di popup.
-    /// Override jika perlu format khusus (mis. float F1).
-    /// </summary>
     protected virtual string ConvertAnswerToString(TAnswer answer) => answer.ToString();
 
-    /// <summary>
-    /// Coba load soal dari JSON (SoalJsonLoader). Return true jika berhasil load.
-    /// Dipanggil subclass di GenerateRandomQuestion() sebelum generasi acak.
-    /// </summary>
     public bool TryLoadFromJson(string kategori)
     {
         SoalEntry entry = SoalJsonLoader.GetRandomSoal(kategori);
@@ -70,20 +133,17 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         soalSaatIni = entry.soal;
         correctAnswerValue = entry.jawaban;
         langkahPenyelesaian = entry.langkah ?? "";
+        petunjukSoal = "Ingat konsep dasar kategori " + kategori;
 
-        // Load pilihan dari JSON
         string[] pilihanArray = entry.pengecof != null && entry.pengecof.Length > 0
             ? entry.pengecof
             : new string[0];
 
-        // Bangun daftar pilihan dan tentukan huruf jawaban benar
         List<string> semuaPilihan = new List<string>(pilihanArray);
         semuaPilihan.Add(entry.jawaban);
 
-        // Shuffle dan tentukan huruf benar
         string[] h = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
 
-        // Shuffle
         for (int i = semuaPilihan.Count - 1; i > 0; i--)
         {
             int r = Random.Range(0, i + 1);
@@ -104,16 +164,13 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
 
         string[] strs = semuaPilihan.ToArray();
         objekPilihanAktif = itemSpawner.SpawnPilihan(strs, h, this);
-
         questionText.text = soalSaatIni;
-
         return true;
     }
 
-    // ---- SHARED UI / FLOW ----
-
     public void SetJawabanPilihan(string pilihan, int nilai, GameObject objekYangDipilih)
     {
+        MathSoundFX.PlayClick();
         playerAnswerLabel = pilihan;
         playerAnswerValue = nilai.ToString();
         objekTerpilih = objekYangDipilih;
@@ -124,6 +181,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
 
     public void SetJawabanPilihan(string pilihan, string nilai, GameObject objekYangDipilih)
     {
+        MathSoundFX.PlayClick();
         playerAnswerLabel = pilihan;
         playerAnswerValue = nilai != null ? nilai : "";
         objekTerpilih = objekYangDipilih;
@@ -134,6 +192,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
 
     public void SetJawabanPilihan(string pilihan, float nilai, GameObject objekYangDipilih)
     {
+        MathSoundFX.PlayClick();
         playerAnswerLabel = pilihan;
         playerAnswerValue = nilai.ToString("F1");
         objekTerpilih = objekYangDipilih;
@@ -144,6 +203,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
 
     public void UndoJawaban()
     {
+        MathSoundFX.PlayClick();
         if (objekTerpilih == null) return;
         ResetAnswerState();
     }
@@ -158,7 +218,6 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         if (undoButton != null) undoButton.gameObject.SetActive(false);
     }
 
-    // flag: jawaban terakhir benar?
     private bool lastWasCorrect;
 
     public void CekJawaban()
@@ -173,14 +232,13 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
             if (obj != null) Destroy(obj);
         objekPilihanAktif.Clear();
 
-        TAnswer correctAnswer = default;
-
         lastWasCorrect = (!string.IsNullOrEmpty(correctAnswerLabel) && playerAnswerLabel == correctAnswerLabel)
                          || IsAnswerCorrect(playerAnswerValue)
                          || IsAnswerCorrect(playerAnswerLabel);
 
         if (lastWasCorrect)
         {
+            MathSoundFX.PlayCorrect();
             if (ScoreManager.instance != null) ScoreManager.instance.AddScore(10);
 
             string pesan = $"Jawaban kamu '{playerAnswerLabel}' ({correctAnswerLabel}) adalah benar! " +
@@ -190,6 +248,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         }
         else
         {
+            MathSoundFX.PlayWrong();
             bool isGameOver = healthManager.ReduceHealth();
             string pembahasan = $"PEMBAHASAN\n\nSoal: {soalSaatIni}\n" +
                                 $"Jawaban Anda: {playerAnswerValue} ({playerAnswerLabel})\n" +
@@ -208,22 +267,19 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         }
     }
 
-    /// <summary>
-    /// Dipanggil oleh QuizTimer saat waktu habis.
-    /// Default: tanda jawaban salah, kemudian proses seperti CekJawaban.
-    /// </summary>
     public virtual void OnTimeUp()
     {
-        lastWasCorrect = false; // waktu habis = otomatis salah
+        lastWasCorrect = false;
 
         if (string.IsNullOrEmpty(playerAnswerLabel))
         {
+            MathSoundFX.PlayWrong();
             foreach (var obj in objekPilihanAktif)
                 if (obj != null) Destroy(obj);
             objekPilihanAktif.Clear();
 
             bool isGameOver = healthManager.ReduceHealth();
-            string pembahasan = $"PEMBAHASAN\n\nSoal: {soalSaatIni}\n" +
+            string pembahasan = $"PEMBAHASAN (WAKTU HABIS)\n\nSoal: {soalSaatIni}\n" +
                                 $"Jawaban Anda: (tidak dijawab)\n" +
                                 $"Jawaban Benar: {correctAnswerLabel} ({correctAnswerValue})\n\n" +
                                 langkahPenyelesaian;
@@ -245,9 +301,6 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         }
     }
 
-    /// <summary>
-    /// Lanjut ke soal berikutnya. Dipanggil via Invoke setelah popup ditampilkan.
-    /// </summary>
     public void LanjutKeSoalBerikutnya()
     {
         ResetAnswerState();
@@ -255,9 +308,6 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         GenerateRandomQuestion();
     }
 
-    /// <summary>
-    /// Versi dengan parameter (bisa dipanggil langsung tanpa delay).
-    /// </summary>
     public void LanjutKeSoalBerikutnya(bool isCorrect)
     {
         ResetAnswerState();
@@ -265,20 +315,11 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         GenerateRandomQuestion();
     }
 
-    // ---- helpers ----
-
-    /// <summary>
-    /// Dapatkan nama kategori saat ini (override di subclass jika perlu).
-    /// </summary>
     protected virtual string GetKategoriName()
     {
-        // Gunakan nama class kecuali di-override
         return GetType().Name.Replace("Manager", "").Replace("controller", "");
     }
 
-    /// <summary>
-    /// Dapatkan ID unik untuk soal ini (digunakan spaced repetition).
-    /// </summary>
     protected virtual string GetSoalId()
     {
         return soalSaatIni.GetHashCode().ToString() + "_" + GetKategoriName();

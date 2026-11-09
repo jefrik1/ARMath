@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Kuis pecahan sesuai fase kurikulum SD (Kelas 1–6 SD).
+/// Kuis pecahan sesuai fase kurikulum SD (Kelas 1–6 SD)
+/// dengan 50% soal cerita kontekstual dan sistem petunjuk.
 /// </summary>
 public class PecahanManager : BaseQuizManager<string>
 {
@@ -21,15 +22,18 @@ public class PecahanManager : BaseQuizManager<string>
             if (penyebut == 0) return;
             if (penyebut < 0) { pembilang = -pembilang; penyebut = -penyebut; }
             int fpb = FPB(pembilang, penyebut);
-            pembilang /= fpb;
-            penyebut /= fpb;
+            if (fpb > 0)
+            {
+                pembilang /= fpb;
+                penyebut /= fpb;
+            }
         }
 
         public override string ToString() => pembilang + "/" + penyebut;
     }
 
     public static int FPB(int a, int b) => b == 0 ? System.Math.Abs(a) : FPB(b, a % b);
-    public static int KPK(int a, int b) => System.Math.Abs(a * b) / FPB(a, b);
+    public static int KPK(int a, int b) => System.Math.Abs(a * b) / (FPB(a, b) == 0 ? 1 : FPB(a, b));
 
     Pecahan Tambah(Pecahan a, Pecahan b) =>
         new Pecahan(a.pembilang * b.penyebut + b.pembilang * a.penyebut, a.penyebut * b.penyebut);
@@ -49,14 +53,10 @@ public class PecahanManager : BaseQuizManager<string>
         foreach (var obj in objekPilihanAktif) { if (obj != null) Destroy(obj); }
         objekPilihanAktif.Clear();
 
-        if (TryLoadFromJson("Pecahan"))
-        {
-            questionText.text = soalSaatIni;
-            return;
-        }
-
         GradePhase phase = GradeLevelConfig.CurrentPhase;
         Pecahan hasil;
+        bool isSoalCerita = Random.value < 0.5f;
+        string nama = GradeLevelConfig.GetRandomStudentName();
 
         if (phase == GradePhase.FaseA)
         {
@@ -69,19 +69,38 @@ public class PecahanManager : BaseQuizManager<string>
             {
                 int multiplier = Random.Range(2, 4);
                 hasil = new Pecahan(1 * multiplier, den * multiplier);
-                soalSaatIni = $"Pecahan manakah yang senilai dengan {p1}?";
-                langkahPenyelesaian = $"Pecahan senilai didapat dengan mengalikan pembilang dan penyebut dengan bilangan yang sama:\n{p1} x {multiplier}/{multiplier} = {hasil}";
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Siti membagi kue bolu menjadi {den} bagian ({p1}). {nama} ingin memotongnya lebih kecil menjadi {hasil.penyebut} bagian sama besar. Pecahan senilai yang tepat adalah ...";
+                }
+                else
+                {
+                    soalSaatIni = $"Pecahan manakah yang senilai dengan {p1}?";
+                }
+
+                langkahPenyelesaian = $"Pecahan senilai didapat dengan mengalikan pembilang dan penyebut dengan angka yang sama:\n{p1} x {multiplier}/{multiplier} = {hasil}";
+                petunjukSoal = $"Kalikan angka atas (pembilang) dan angka bawah (penyebut) dengan bilangan yang sama ({multiplier}).";
             }
             else
             {
                 hasil = p1;
-                soalSaatIni = $"Satu kue dibagi menjadi {den} bagian sama besar. Nilai satu bagian adalah ...";
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Ibu memotong sebuah pizza menjadi {den} potong sama besar. {nama} memakan 1 potong. Berapa bagian pizza yang dimakan {nama}?";
+                }
+                else
+                {
+                    soalSaatIni = $"Satu lingkaran utuh dibagi menjadi {den} bagian sama besar. Nilai 1 bagian tersebut adalah ...";
+                }
+
                 langkahPenyelesaian = $"Satu bagian dari total {den} bagian sama besar bernilai {p1}.";
+                petunjukSoal = "Ingat: Pembilang (angka atas) adalah bagian yang diambil (1), Penyebut (angka bawah) adalah total seluruh potongan.";
             }
         }
         else if (phase == GradePhase.FaseB)
         {
-            // Kelas 3–4 SD: Pecahan berpenyebut sama (penyebut <= 12) atau pecahan senilai
+            // Kelas 3–4 SD: Pecahan berpenyebut sama (penyebut <= 12)
             int den = Random.Range(3, 11);
             int p1 = Random.Range(1, den);
             int p2 = Random.Range(1, den);
@@ -93,8 +112,18 @@ public class PecahanManager : BaseQuizManager<string>
                 Pecahan f2 = new Pecahan(p2, den);
                 hasil = new Pecahan(p1 + p2, den);
                 hasil.Sederhanakan();
-                soalSaatIni = $"{f1} + {f2} = ...";
-                langkahPenyelesaian = $"Karena penyebut sudah sama ({den}), cukup jumlahkan pembilangnya:\n{p1}/{den} + {p2}/{den} = {p1 + p2}/{den} = {hasil}";
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"{nama} meminum {f1} liter air di pagi hari dan {f2} liter air di siang hari. Berapa total air yang diminum {nama}?";
+                }
+                else
+                {
+                    soalSaatIni = $"{f1} + {f2} = ...";
+                }
+
+                langkahPenyelesaian = $"Karena penyebutnya sudah sama ({den}), cukup jumlahkan pembilangnya:\n{p1}/{den} + {p2}/{den} = {p1 + p2}/{den} = {hasil}";
+                petunjukSoal = $"Penyebut kedua pecahan sudah sama yaitu {den}. Jumlahkan pembilang ({p1} + {p2}), penyebutnya tetap sama.";
             }
             else
             {
@@ -104,18 +133,28 @@ public class PecahanManager : BaseQuizManager<string>
                 Pecahan f2 = new Pecahan(p2, den);
                 hasil = new Pecahan(p1 - p2, den);
                 hasil.Sederhanakan();
-                soalSaatIni = $"{f1} - {f2} = ...";
-                langkahPenyelesaian = $"Karena penyebut sudah sama ({den}), cukup kurangkan pembilangnya:\n{p1}/{den} - {p2}/{den} = {p1 - p2}/{den} = {hasil}";
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Ada pita sepanjang {f1} meter. Dipakai untuk menghias kado sepanjang {f2} meter. Berapa sisa panjang pita sekarang?";
+                }
+                else
+                {
+                    soalSaatIni = $"{f1} - {f2} = ...";
+                }
+
+                langkahPenyelesaian = $"Karena penyebutnya sudah sama ({den}), cukup kurangkan pembilangnya:\n{p1}/{den} - {p2}/{den} = {p1 - p2}/{den} = {hasil}";
+                petunjukSoal = $"Penyebut kedua pecahan sudah sama ({den}). Kurangkan pembilang ({p1} - {p2}).";
             }
         }
         else
         {
             // Kelas 5–6 SD: Penjumlahan/pengurangan beda penyebut (KPK), perkalian, atau pembagian
             int op = Random.Range(0, 4);
-            int b = Random.Range(2, 9);
+            int b = Random.Range(2, 8);
             int a = Random.Range(1, b);
-            int d = Random.Range(2, 9);
-            while (d == b) d = Random.Range(2, 9); // pastikan beda penyebut
+            int d = Random.Range(2, 8);
+            while (d == b) d = Random.Range(2, 8);
             int c = Random.Range(1, d);
 
             Pecahan f1 = new Pecahan(a, b); f1.Sederhanakan();
@@ -127,10 +166,21 @@ public class PecahanManager : BaseQuizManager<string>
                     hasil = Tambah(f1, f2);
                     hasil.Sederhanakan();
                     int kpkAdd = KPK(f1.penyebut, f2.penyebut);
-                    soalSaatIni = $"{f1} + {f2} = ...";
+
+                    if (isSoalCerita)
+                    {
+                        soalSaatIni = $"Pak Tani mencangkul {f1} bagian sawah di pagi hari dan {f2} bagian di sore hari. Berapa total bagian sawah yang sudah dicangkul?";
+                    }
+                    else
+                    {
+                        soalSaatIni = $"{f1} + {f2} = ...";
+                    }
+
                     langkahPenyelesaian = $"Samakan penyebut dengan KPK({f1.penyebut}, {f2.penyebut}) = {kpkAdd}:\n" +
                                           $"{f1.pembilang * (kpkAdd / f1.penyebut)}/{kpkAdd} + {f2.pembilang * (kpkAdd / f2.penyebut)}/{kpkAdd} = {hasil}";
+                    petunjukSoal = $"Cari KPK dari penyebut {f1.penyebut} dan {f2.penyebut} untuk menyamakan penyebut pecahan.";
                     break;
+
                 case 1:
                     if ((float)f1.pembilang / f1.penyebut < (float)f2.pembilang / f2.penyebut)
                     {
@@ -139,23 +189,37 @@ public class PecahanManager : BaseQuizManager<string>
                     hasil = Kurang(f1, f2);
                     hasil.Sederhanakan();
                     int kpkSub = KPK(f1.penyebut, f2.penyebut);
-                    soalSaatIni = $"{f1} - {f2} = ...";
+
+                    if (isSoalCerita)
+                    {
+                        soalSaatIni = $"Ibu memiliki persediaan tepung {f1} kg. Digunakan untuk membuat kue sebanyak {f2} kg. Berapa sisa tepung ibu?";
+                    }
+                    else
+                    {
+                        soalSaatIni = $"{f1} - {f2} = ...";
+                    }
+
                     langkahPenyelesaian = $"Samakan penyebut dengan KPK({f1.penyebut}, {f2.penyebut}) = {kpkSub}:\n" +
                                           $"{f1.pembilang * (kpkSub / f1.penyebut)}/{kpkSub} - {f2.pembilang * (kpkSub / f2.penyebut)}/{kpkSub} = {hasil}";
+                    petunjukSoal = $"Samakan penyebut kedua pecahan terlebih dahulu menggunakan KPK ({kpkSub}).";
                     break;
+
                 case 2:
                     hasil = Kali(f1, f2);
                     hasil.Sederhanakan();
                     soalSaatIni = $"{f1} x {f2} = ...";
                     langkahPenyelesaian = $"Kalikan pembilang dengan pembilang, dan penyebut dengan penyebut:\n" +
-                                          $"{f1.pembilang} x {f2.pembilang} / {f1.penyebut} x {f2.penyebut} = {hasil}";
+                                          $"{f1.pembilang} x {f2.pembilang} / ({f1.penyebut} x {f2.penyebut}) = {hasil}";
+                    petunjukSoal = "Pada perkalian pecahan, kalikan pembilang dengan pembilang dan penyebut dengan penyebut secara langsung.";
                     break;
+
                 default:
                     hasil = Bagi(f1, f2);
                     hasil.Sederhanakan();
                     soalSaatIni = $"{f1} : {f2} = ...";
                     langkahPenyelesaian = $"Balikkan pecahan pembagi lalu kalikan:\n" +
                                           $"{f1} x {f2.penyebut}/{f2.pembilang} = {hasil}";
+                    petunjukSoal = $"Ubah tanda bagi (:) menjadi kali (x), lalu balikkan pecahan kedua menjadi {f2.penyebut}/{f2.pembilang}.";
                     break;
             }
         }

@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Kuis perkalian bilangan sesuai fase kurikulum SD (Kelas 1–6 SD).
+/// Kuis perkalian bilangan sesuai fase kurikulum SD (Kelas 1–6 SD)
+/// dengan 50% soal cerita kontekstual dan sistem petunjuk.
 /// </summary>
 public class KaliManager : BaseQuizManager<int>
 {
@@ -14,6 +15,9 @@ public class KaliManager : BaseQuizManager<int>
 
         GradePhase phase = GradeLevelConfig.CurrentPhase;
         int num1, num2, jawabanBenar;
+        bool isSoalCerita = Random.value < 0.5f;
+        string nama = GradeLevelConfig.GetRandomStudentName();
+        string barang = GradeLevelConfig.GetRandomItemName();
 
         if (phase == GradePhase.FaseA)
         {
@@ -21,66 +25,113 @@ public class KaliManager : BaseQuizManager<int>
             num1 = Random.Range(2, 6);
             num2 = Random.Range(1, 6);
             jawabanBenar = num1 * num2;
-            soalSaatIni = num1 + " x " + num2 + " = ...";
-            langkahPenyelesaian = $"Perkalian dasar sebagai penjumlahan berulang:\n{num1} x {num2} = {GetRepeatedAdditionString(num2, num1)} = {jawabanBenar}";
+
+            if (isSoalCerita)
+            {
+                soalSaatIni = $"{nama} membeli {num1} kantong {barang}. Jika setiap kantong berisi {num2} buah {barang}, berapa banyak seluruh {barang} yang dibeli {nama}?";
+            }
+            else
+            {
+                soalSaatIni = $"{num1} x {num2} = ...";
+            }
+
+            langkahPenyelesaian = $"Perkalian dasar sebagai penjumlahan berulang:\n" +
+                                  $"{num1} x {num2} = {GetRepeatedAdditionString(num2, num1)} = {jawabanBenar}";
+            petunjukSoal = $"Perkalian adalah penjumlahan berulang:\nTambahkan angka {num2} sebanyak {num1} kali.";
         }
         else if (phase == GradePhase.FaseB)
         {
             // Kelas 3–4 SD: Tabel perkalian 2–10 dan missing-operand (a x ... = c)
             int format = Random.Range(0, 3);
-            num1 = Random.Range(2, 11);
-            num2 = Random.Range(2, 11);
-            int prod = num1 * num2;
-
             if (format == 0)
             {
-                soalSaatIni = num1 + " x ... = " + prod;
-                jawabanBenar = num2;
-                langkahPenyelesaian = $"Mencari faktor pengali:\n... = {prod} : {num1} = {num2}";
-            }
-            else if (format == 1)
-            {
-                soalSaatIni = "... x " + num2 + " = " + prod;
-                jawabanBenar = num1;
-                langkahPenyelesaian = $"Mencari faktor pengali:\n... = {prod} : {num2} = {num1}";
+                // Missing operand: a x ... = c
+                num1 = Random.Range(3, 10);
+                jawabanBenar = Random.Range(2, 10);
+                int hasil = num1 * jawabanBenar;
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Ada {num1} meja di ruang kelas. Total pensil di seluruh meja ada {hasil} buah. Jika setiap meja memiliki jumlah pensil yang sama, berapa pensil di tiap meja?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} x ... = {hasil}";
+                }
+
+                langkahPenyelesaian = $"Mencari faktor pengali yang hilang:\n" +
+                                      $"{num1} x n = {hasil}\n" +
+                                      $"n = {hasil} ÷ {num1} = {jawabanBenar}";
+                petunjukSoal = $"Untuk mencari pengali yang hilang, bagi hasil ({hasil}) dengan angka yang diketahui ({num1}).";
             }
             else
             {
-                soalSaatIni = num1 + " x " + num2 + " = ...";
-                jawabanBenar = prod;
-                langkahPenyelesaian = $"Tabel perkalian:\n{num1} x {num2} = {prod}";
+                num1 = Random.Range(4, 13);
+                num2 = Random.Range(6, 16);
+                jawabanBenar = num1 * num2;
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Sebuah toko menyusun {num1} baris kotak susu. Setiap baris berisi {num2} kotak susu. Berapa total kotak susu yang ada di toko tersebut?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} x {num2} = ...";
+                }
+
+                langkahPenyelesaian = $"Perkalian bersusun:\n{num1} x {num2} = {jawabanBenar}";
+                petunjukSoal = "Gunakan perkalian bersusun ke bawah: kalikan satuan terlebih dahulu, lalu puluhannya.";
             }
         }
         else
         {
-            // Kelas 5–6 SD: Perkalian multi-digit dan bilangan bulat negatif
-            bool withNegative = Random.value > 0.4f;
-            if (withNegative)
+            // Kelas 5–6 SD: Perkalian bilangan bulat bertanda (+ x -, - x -)
+            int format = Random.Range(0, 2);
+            if (format == 0)
             {
-                num1 = Random.Range(-12, 15);
-                if (num1 == 0) num1 = -6;
-                num2 = Random.Range(-12, 15);
-                if (num2 == 0) num2 = 7;
+                // Negatif x Positif
+                num1 = Random.Range(-12, -2);
+                num2 = Random.Range(2, 10);
                 jawabanBenar = num1 * num2;
-                string strNum1 = num1 < 0 ? $"({num1})" : num1.ToString();
-                string strNum2 = num2 < 0 ? $"({num2})" : num2.ToString();
-                soalSaatIni = $"{strNum1} x {strNum2} = ...";
-                string rule = (num1 < 0 && num2 < 0) ? "Negatif x Negatif = Positif" :
-                              (num1 < 0 || num2 < 0) ? "Negatif x Positif = Negatif" : "Positif x Positif = Positif";
-                langkahPenyelesaian = $"Aturan tanda: {rule}\n{strNum1} x {strNum2} = {jawabanBenar}";
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Sebuah kapal selam menyelam turun {Mathf.Abs(num1)} meter setiap menit ({num1} m/menit). Berapa meter perubahan kedalamannya setelah {num2} menit?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} x {num2} = ...";
+                }
+
+                langkahPenyelesaian = $"Perkalian Bilangan Bulat Negatif x Positif:\n" +
+                                      $"(-) x (+) = (-)\n" +
+                                      $"{num1} x {num2} = {jawabanBenar}";
+                petunjukSoal = "Aturan perkalian tanda:\nBilangan negatif dikali bilangan positif menghasilkan bilangan negatif (-).";
             }
             else
             {
-                num1 = Random.Range(12, 50);
-                num2 = Random.Range(11, 25);
+                // Negatif x Negatif
+                num1 = Random.Range(-10, -2);
+                num2 = Random.Range(-10, -2);
                 jawabanBenar = num1 * num2;
-                soalSaatIni = $"{num1} x {num2} = ...";
-                langkahPenyelesaian = $"Perkalian bersusun (Kelas 5-6 SD):\n{num1} x {num2} = {jawabanBenar}";
+
+                soalSaatIni = $"({num1}) x ({num2}) = ...";
+                langkahPenyelesaian = $"Perkalian Bilangan Bulat Negatif x Negatif:\n" +
+                                      $"(-) x (-) = (+)\n" +
+                                      $"({num1}) x ({num2}) = {jawabanBenar}";
+                petunjukSoal = "Aturan perkalian tanda:\nBilangan negatif dikali bilangan negatif menghasilkan bilangan positif (+).";
             }
         }
 
         questionText.text = soalSaatIni;
         BuatPilihan(jawabanBenar);
+    }
+
+    private string GetRepeatedAdditionString(int val, int count)
+    {
+        List<string> list = new List<string>();
+        for (int i = 0; i < count; i++) list.Add(val.ToString());
+        return string.Join(" + ", list.ToArray());
     }
 
     public override bool IsAnswerCorrect(string playerAnswer)
@@ -93,19 +144,19 @@ public class KaliManager : BaseQuizManager<int>
     private void BuatPilihan(int jawabanBenar)
     {
         List<int> pilihan = new List<int> { jawabanBenar };
-        while (pilihan.Count < 11)
+        int maxAttempts = 100;
+        int attempts = 0;
+        while (pilihan.Count < 11 && attempts++ < maxAttempts)
         {
             int pengecoh = jawabanBenar + Random.Range(-10, 11);
             if (pengecoh != jawabanBenar && !pilihan.Contains(pengecoh))
                 pilihan.Add(pengecoh);
         }
+        while (pilihan.Count < 11)
+        {
+            int fallback = jawabanBenar + pilihan.Count * 3;
+            if (!pilihan.Contains(fallback)) pilihan.Add(fallback);
+        }
         SpawnPilihan(pilihan, jawabanBenar);
-    }
-
-    private string GetRepeatedAdditionString(int val, int count)
-    {
-        List<string> list = new List<string>();
-        for (int i = 0; i < count; i++) list.Add(val.ToString());
-        return string.Join(" + ", list.ToArray());
     }
 }

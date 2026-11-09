@@ -3,6 +3,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Manajer MainMenu: navigasi antar panel, selektor jenjang kelas (Fase A, B, C SD),
+/// dan penampil badge bintang penguasaan materi (Mastery Stars).
+/// </summary>
 public class MainMenuManager : MonoBehaviour
 {
     [Header("Panel Utama")]
@@ -22,7 +26,7 @@ public class MainMenuManager : MonoBehaviour
     public GameObject materiPanel_Pecahan;
 
     [Header("Panel Kategori Baru (opsional - jika tidak di-assign, akan dibuat dinamis)")]
-    public GameObject soalSubCategoryPanel_Lainnya; // panel fallback untuk kategori baru
+    public GameObject soalSubCategoryPanel_Lainnya;
 
     [Header("Navigasi")]
     public GameNavigation gameNavigation;
@@ -31,7 +35,12 @@ public class MainMenuManager : MonoBehaviour
 
     void Start()
     {
-        SetupGradeLevelSelector();
+        // Pasang selektor jenjang kelas di panel Soal dan Materi
+        SetupGradeLevelSelector(soalCategoryPanel);
+        SetupGradeLevelSelector(materiCategoryPanel);
+
+        // Perbarui badge bintang di tombol-tombol kuis
+        RefreshMasteryBadges();
 
         if (MenuMemory.TargetPanelOnLoad != PanelTarget.None)
         {
@@ -45,18 +54,19 @@ public class MainMenuManager : MonoBehaviour
         }
     }
 
-    private void SetupGradeLevelSelector()
+    /// <summary>
+    /// Injeksi bar selektor jenjang kelas uGUI (Kelas 1-2, Kelas 3-4, Kelas 5-6 SD).
+    /// </summary>
+    private void SetupGradeLevelSelector(GameObject parentPanel)
     {
-        if (soalCategoryPanel == null) return;
-        Transform existing = soalCategoryPanel.transform.Find("GradeLevelSelectorBar");
+        if (parentPanel == null) return;
+        Transform existing = parentPanel.transform.Find("GradeLevelSelectorBar");
         if (existing != null) return;
 
-        // Container GameObject with RectTransform & HorizontalLayoutGroup
         GameObject bar = new GameObject("GradeLevelSelectorBar", typeof(RectTransform), typeof(HorizontalLayoutGroup));
-        bar.transform.SetParent(soalCategoryPanel.transform, false);
+        bar.transform.SetParent(parentPanel.transform, false);
 
         RectTransform rt = bar.GetComponent<RectTransform>();
-        // Posisikan di bagian atas panel Soal
         rt.anchorMin = new Vector2(0.08f, 0.88f);
         rt.anchorMax = new Vector2(0.92f, 0.96f);
         rt.offsetMin = Vector2.zero;
@@ -108,6 +118,7 @@ public class MainMenuManager : MonoBehaviour
             btn.onClick.AddListener(() =>
             {
                 GradeLevelConfig.CurrentPhase = p;
+                MathSoundFX.PlayClick();
                 UpdateGradeButtonStyles(phases, buttonImages, buttonTexts);
             });
         }
@@ -118,8 +129,8 @@ public class MainMenuManager : MonoBehaviour
     private void UpdateGradeButtonStyles(GradePhase[] phases, List<Image> buttonImages, List<TMP_Text> buttonTexts)
     {
         GradePhase current = GradeLevelConfig.CurrentPhase;
-        Color activeColor = new Color(0.12f, 0.58f, 0.95f, 1f); // Vibrant blue
-        Color inactiveColor = new Color(0.25f, 0.28f, 0.35f, 0.85f); // Slate gray
+        Color activeColor = new Color(0.12f, 0.58f, 0.95f, 1f);
+        Color inactiveColor = new Color(0.25f, 0.28f, 0.35f, 0.85f);
 
         for (int i = 0; i < phases.Length; i++)
         {
@@ -136,26 +147,47 @@ public class MainMenuManager : MonoBehaviour
         }
     }
 
-    private GameObject FindPanelByName(string name)
+    /// <summary>
+    /// Perbarui label pada seluruh tombol kuis agar menampilkan bintang (★ 1–3) dan high score.
+    /// </summary>
+    public void RefreshMasteryBadges()
     {
-        if (soalCategoryPanel != null && soalCategoryPanel.name == name) return soalCategoryPanel;
-        if (materiCategoryPanel != null && materiCategoryPanel.name == name) return materiCategoryPanel;
+        GameObject[] panels = new GameObject[] {
+            soalCategoryPanel,
+            soalSubCategoryPanel_PerhitunganDasar,
+            soalSubCategoryPanel_PengolahanData
+        };
 
-        if (soalSubCategoryPanel_PerhitunganDasar != null &&
-            soalSubCategoryPanel_PerhitunganDasar.name == name)
-            return soalSubCategoryPanel_PerhitunganDasar;
-        if (soalSubCategoryPanel_PengolahanData != null &&
-            soalSubCategoryPanel_PengolahanData.name == name)
-            return soalSubCategoryPanel_PengolahanData;
-        if (materiSubCategoryPanel_PerhitunganDasar != null &&
-            materiSubCategoryPanel_PerhitunganDasar.name == name)
-            return materiSubCategoryPanel_PerhitunganDasar;
-        if (materiSubCategoryPanel_PengolahanData != null &&
-            materiSubCategoryPanel_PengolahanData.name == name)
-            return materiSubCategoryPanel_PengolahanData;
+        foreach (var p in panels)
+        {
+            if (p == null) continue;
+            Button[] btns = p.GetComponentsInChildren<Button>(true);
+            foreach (var b in btns)
+            {
+                if (b.name.StartsWith("Btn_Fase")) continue;
 
-        Debug.LogWarning("Panel dengan nama '" + name + "' tidak ditemukan! Kembali ke Start Panel.");
-        return startPanel;
+                TMP_Text tmp = b.GetComponentInChildren<TMP_Text>();
+                if (tmp == null) continue;
+
+                string currentText = tmp.text;
+                foreach (string cat in KATEGORI)
+                {
+                    if (currentText.Contains(cat) || b.name.Contains(cat))
+                    {
+                        string sceneName = "Soal" + cat;
+                        int stars = ScoreManager.GetStars(sceneName);
+                        int hs = ScoreManager.GetHighScore(sceneName);
+                        string starStr = ScoreManager.GetStarsString(sceneName);
+
+                        if (stars > 0 || hs > 0)
+                        {
+                            tmp.text = $"{cat}\n<color=#FFD700>{starStr}</color> <size=14>(Skor: {hs})</size>";
+                        }
+                        break;
+                    }
+                }
+            }
+        }
     }
 
     public void ShowPanel(GameObject panelToShow)
@@ -171,6 +203,7 @@ public class MainMenuManager : MonoBehaviour
         if (panelToShow)
         {
             panelToShow.SetActive(true);
+            RefreshMasteryBadges();
         }
     }
 
@@ -188,7 +221,7 @@ public class MainMenuManager : MonoBehaviour
             default:
                 Debug.LogWarning("Target panel " + target + " tidak dikenali. Kembali ke Start Panel.");
                 return startPanel;
-        }
+            }
     }
 
     public void OpenStart() => ShowPanel(startPanel);
@@ -198,11 +231,9 @@ public class MainMenuManager : MonoBehaviour
     public void BackToSoalCategory() => ShowPanel(soalCategoryPanel);
     public void BackToMateriCategory() => ShowPanel(materiCategoryPanel);
 
-    /// <summary>
-    /// Buka kategori atau langsung load scene.
-    /// </summary>
     public void OpenSoalSubCategory(string category)
     {
+        MathSoundFX.PlayClick();
         if (gameNavigation != null)
         {
             string sceneName = "Soal" + category;
@@ -216,30 +247,24 @@ public class MainMenuManager : MonoBehaviour
 
     public void OpenMateriSubCategory(string category)
     {
+        MathSoundFX.PlayClick();
         if (category == "PengolahanData")
             ShowPanel(materiSubCategoryPanel_PengolahanData);
         else if (category == "PerhitunganDasar")
             ShowPanel(materiSubCategoryPanel_PerhitunganDasar);
     }
 
-    /// <summary>
-    /// Buka kategori soal baru (dinamis). Jika panel belum di-assign di Inspector,
-    /// gunakan panel fallback lainnya.
-    /// </summary>
     public void OpenNewCategory(string categoryName)
     {
+        MathSoundFX.PlayClick();
         GameObject panel = soalSubCategoryPanel_Lainnya != null ? soalSubCategoryPanel_Lainnya : startPanel;
 
         if (!dynamicPanels.ContainsKey(categoryName))
             dynamicPanels[categoryName] = panel;
 
         ShowPanel(panel);
-        Debug.Log("[MainMenu] Membuka kategori baru: " + categoryName);
     }
 
-    /// <summary>
-    /// Kembali dari panel kategori dinamis ke kategori soal utama.
-    /// </summary>
     public void BackFromDynamicCategory()
     {
         ShowPanel(soalCategoryPanel);
@@ -252,9 +277,6 @@ public class MainMenuManager : MonoBehaviour
         "Pecahan", "BangunRuang", "Rata-Rata", "Median", "Modus"
     };
 
-    /// <summary>
-    /// Dapatkan daftar semua kategori yang tersedia.
-    /// </summary>
     public string[] GetAllKategori()
     {
         return KATEGORI;

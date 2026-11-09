@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Kuis penjumlahan bilangan sesuai fase kurikulum SD (Kelas 1–6 SD).
+/// Kuis penjumlahan bilangan sesuai fase kurikulum SD (Kelas 1–6 SD)
+/// dengan 50% soal cerita kontekstual dan sistem petunjuk.
 /// </summary>
 public class TambahManager : BaseQuizManager<int>
 {
@@ -12,75 +13,120 @@ public class TambahManager : BaseQuizManager<int>
         foreach (var obj in objekPilihanAktif) { if (obj != null) Destroy(obj); }
         objekPilihanAktif.Clear();
 
-        if (TryLoadFromJson("PerhitunganDasar"))
-        {
-            if (int.TryParse(correctAnswerValue, out int jsonJawaban))
-            {
-                questionText.text = soalSaatIni;
-                return;
-            }
-        }
-
         GradePhase phase = GradeLevelConfig.CurrentPhase;
         int num1, num2, jawabanBenar;
+        bool isSoalCerita = Random.value < 0.5f;
+        string nama = GradeLevelConfig.GetRandomStudentName();
+        string barang = GradeLevelConfig.GetRandomItemName();
 
         if (phase == GradePhase.FaseA)
         {
-            // Kelas 1–2 SD: Bilangan cacah 1–50, tanpa negatif, bantuan visual / hitung maju
+            // Kelas 1–2 SD: Bilangan cacah 1–50, tanpa negatif, bantuan hitung maju / nilai tempat
             num1 = Random.Range(1, 30);
             num2 = Random.Range(1, 21);
             jawabanBenar = num1 + num2;
-            soalSaatIni = num1 + " + " + num2 + " = ...";
-            langkahPenyelesaian = $"Penjumlahan (Kelas 1-2 SD):\nHitung maju dari {num1} sebanyak {num2} langkah.\n{num1} + {num2} = {jawabanBenar}";
+
+            if (isSoalCerita)
+            {
+                soalSaatIni = $"{nama} memiliki {num1} buah {barang}. Ibu memberikan lagi {num2} buah {barang}. Berapa jumlah seluruh {barang} {nama} sekarang?";
+            }
+            else
+            {
+                soalSaatIni = $"{num1} + {num2} = ...";
+            }
+
+            langkahPenyelesaian = $"Penjumlahan (Kelas 1-2 SD):\n" +
+                                  $"Mulai dari angka {num1}, lalu hitung maju {num2} langkah:\n" +
+                                  $"{num1} + {num2} = {jawabanBenar}";
+            petunjukSoal = $"Gabungkan kedua kelompok benda.\nHitung maju dari {num1} sebanyak {num2} langkah.";
         }
         else if (phase == GradePhase.FaseB)
         {
             // Kelas 3–4 SD: Bilangan hingga 500 dan missing-operand (a + ... = c)
             int format = Random.Range(0, 3);
-            num1 = Random.Range(15, 250);
-            num2 = Random.Range(15, 250);
-            int sum = num1 + num2;
-
             if (format == 0)
             {
-                soalSaatIni = num1 + " + ... = " + sum;
-                jawabanBenar = num2;
-                langkahPenyelesaian = $"Mencari bilangan yang hilang:\n... = {sum} - {num1} = {num2}";
-            }
-            else if (format == 1)
-            {
-                soalSaatIni = "... + " + num2 + " = " + sum;
-                jawabanBenar = num1;
-                langkahPenyelesaian = $"Mencari bilangan yang hilang:\n... = {sum} - {num2} = {num1}";
+                // Missing operand: a + ... = c
+                num1 = Random.Range(15, 120);
+                jawabanBenar = Random.Range(10, 80);
+                int total = num1 + jawabanBenar;
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Sebuah keranjang berisi {num1} buah {barang}. Setelah ditambahkan beberapa {barang} lagi, totalnya menjadi {total} buah. Berapa buah {barang} yang baru ditambahkan?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} + ... = {total}";
+                }
+
+                langkahPenyelesaian = $"Mencari angka yang hilang pada penjumlahan:\n" +
+                                      $"{num1} + n = {total}\n" +
+                                      $"n = {total} - {num1} = {jawabanBenar}";
+                petunjukSoal = $"Untuk mencari nilai yang hilang, kurangkan bilangan hasil ({total}) dengan bilangan pertama ({num1}).";
             }
             else
             {
-                soalSaatIni = num1 + " + " + num2 + " = ...";
-                jawabanBenar = sum;
-                langkahPenyelesaian = $"Jumlahkan ratusan, puluhan, dan satuan:\n{num1} + {num2} = {sum}";
+                num1 = Random.Range(40, 250);
+                num2 = Random.Range(30, 250);
+                jawabanBenar = num1 + num2;
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Di perpustakaan sekolah terdapat {num1} buku cerita dan {num2} buku pelajaran. Berapa jumlah total buku di perpustakaan?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} + {num2} = ...";
+                }
+
+                langkahPenyelesaian = $"Penjumlahan bersusun ratusan dan puluhan:\n" +
+                                      $"{num1} + {num2} = {jawabanBenar}";
+                petunjukSoal = "Jumlahkan nilai satuan dengan satuan terlebih dahulu, lalu puluhan, kemudian ratusan.";
             }
         }
         else
         {
-            // Kelas 5–6 SD: Multi-digit dan operasi bilangan bulat (termasuk negatif)
-            bool withNegative = Random.value > 0.4f;
-            if (withNegative)
+            // Kelas 5–6 SD: Operasi campuran & bilangan bulat bertanda / kontekstual suhu
+            int format = Random.Range(0, 2);
+            if (format == 0)
             {
-                num1 = Random.Range(-50, 100);
-                num2 = Random.Range(-50, 100);
+                // Kontekstual suhu / bilangan negatif
+                num1 = Random.Range(-25, 0);
+                num2 = Random.Range(5, 35);
                 jawabanBenar = num1 + num2;
-                string strNum1 = num1 < 0 ? $"({num1})" : num1.ToString();
-                string strNum2 = num2 < 0 ? $"({num2})" : num2.ToString();
-                soalSaatIni = $"{strNum1} + {strNum2} = ...";
-                langkahPenyelesaian = $"Operasi bilangan bulat (Kelas 5-6 SD):\n{strNum1} + {strNum2} = {jawabanBenar}";
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"Suhu udara di dalam ruang pendingin mula-mula {num1}°C. Setelah pendingin dimatikan, suhu naik sebesar {num2}°C. Berapa suhu ruangan sekarang?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} + {num2} = ...";
+                }
+
+                langkahPenyelesaian = $"Penjumlahan Bilangan Bulat Negatif & Positif:\n" +
+                                      $"Mulai dari {num1}, bergerak ke kanan sejauh {num2} pada garis bilangan:\n" +
+                                      $"{num1} + {num2} = {jawabanBenar}";
+                petunjukSoal = "Pada garis bilangan, menambah bilangan positif berarti melompat ke arah kanan.";
             }
             else
             {
-                num1 = Random.Range(100, 999);
-                num2 = Random.Range(100, 999);
+                num1 = Random.Range(100, 750);
+                num2 = Random.Range(100, 750);
                 jawabanBenar = num1 + num2;
-                soalSaatIni = $"{num1} + {num2} = ...";
-                langkahPenyelesaian = $"Penjumlahan bersusun (Kelas 5-6 SD):\n  {num1}\n+ {num2}\n-------\n  {jawabanBenar}";
+
+                if (isSoalCerita)
+                {
+                    soalSaatIni = $"{nama} menabung sebesar Rp{num1}.000 pada bulan pertama dan Rp{num2}.000 pada bulan kedua. Berapa total tabungan {nama} (dalam ribuan Rupiah)?";
+                }
+                else
+                {
+                    soalSaatIni = $"{num1} + {num2} = ...";
+                }
+
+                langkahPenyelesaian = $"Penjumlahan Bilangan Bulat Besar:\n{num1} + {num2} = {jawabanBenar}";
+                petunjukSoal = "Gunakan penjumlahan bersusun ke bawah dengan teliti menjaga simpanan angka puluhan/ratusan.";
             }
         }
 
@@ -98,11 +144,18 @@ public class TambahManager : BaseQuizManager<int>
     private void BuatPilihan(int jawabanBenar)
     {
         List<int> pilihan = new List<int> { jawabanBenar };
-        while (pilihan.Count < 11)
+        int maxAttempts = 100;
+        int attempts = 0;
+        while (pilihan.Count < 11 && attempts++ < maxAttempts)
         {
             int pengecoh = jawabanBenar + Random.Range(-10, 11);
             if (pengecoh != jawabanBenar && !pilihan.Contains(pengecoh))
                 pilihan.Add(pengecoh);
+        }
+        while (pilihan.Count < 11)
+        {
+            int fallback = jawabanBenar + pilihan.Count * 2;
+            if (!pilihan.Contains(fallback)) pilihan.Add(fallback);
         }
         SpawnPilihan(pilihan, jawabanBenar);
     }

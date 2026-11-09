@@ -3,22 +3,19 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Manajer Materi Pengolahan Data dengan Visualisasi Grafik Batang 3D AR Prosedural (Matematika SD).
+/// Manajer Materi Pengolahan Data dengan Diagram Batang 3D AR Prosedural (Kurikulum SD):
+/// 1. Modus: Penyorotan batang frekuensi tertinggi dengan animasi denyut (pulse) & warna hijau cerah.
+/// 2. Median: Animasi pengurutan batang dari terendah ke tertinggi dan penyorotan batang tengah (emas).
+/// 3. Mean: Bidang datar transparan di ketinggian rata-rata (13,8) yang meratakan puncak dan lembah data.
 /// </summary>
 public class PDataManager : MonoBehaviour
 {
     [Header("UI References")]
-    [Tooltip("Drag TextMeshPro - Judul di sini")]
     public TextMeshProUGUI textJudul;
-
-    [Tooltip("Drag TextMeshPro - Isi Materi di sini")]
     public TextMeshProUGUI textIsi;
-
-    [Tooltip("Masukkan 3 Tombol Menu (Modus, Median, Mean)")]
     public Button[] tombolMenu;
 
     [Header("3D AR Visualizer")]
-    [Tooltip("Anchor atau Target AR opsional. Jika kosong, visualizer ditempatkan otomatis.")]
     public Transform arTargetRoot;
 
     private struct DataMateri
@@ -42,7 +39,11 @@ public class PDataManager : MonoBehaviour
         for (int i = 0; i < tombolMenu.Length; i++)
         {
             int index = i;
-            tombolMenu[i].onClick.AddListener(() => TampilkanMateri(index));
+            tombolMenu[i].onClick.AddListener(() =>
+            {
+                MathSoundFX.PlayClick();
+                TampilkanMateri(index);
+            });
         }
     }
 
@@ -61,7 +62,7 @@ public class PDataManager : MonoBehaviour
         listMateri = new DataMateri[3];
 
         // Modus
-        listMateri[0].judul = "Modus";
+        listMateri[0].judul = "Modus (Nilai Paling Sering Muncul)";
         listMateri[0].isi = "<b>Modus</b> adalah nilai yang paling sering muncul dalam kumpulan data.\n\n" +
             "<b>Contoh Data:</b>\n" +
             "6, 6, 7, 8, 8, 8, 9\n\n" +
@@ -71,10 +72,10 @@ public class PDataManager : MonoBehaviour
             "• <b>Angka 8: muncul 3 kali (terbanyak)</b>\n" +
             "• Angka 9: muncul 1 kali\n\n" +
             "<b>Maka, Modus = 8</b>\n" +
-            "<i>(Lihat diagram batang 3D: Batang angka 8 disorot warna hijau terang)</i>";
+            "<i>(Perhatikan batang 3D angka 8: Disorot warna hijau cerah dengan animasi denyut)</i>";
 
         // Median
-        listMateri[1].judul = "Median";
+        listMateri[1].judul = "Median (Nilai Tengah Data Terurut)";
         listMateri[1].isi = "<b>Median</b> adalah nilai tengah dari kumpulan data setelah diurutkan dari terkecil ke terbesar.\n\n" +
             "<b>Contoh Data Ganjil:</b>\n" +
             "Data mentah: 7, 4, 18, 10, 14\n" +
@@ -82,19 +83,18 @@ public class PDataManager : MonoBehaviour
             "2. Banyak data n = 5 (ganjil)\n" +
             "3. Nilai tepat di tengah adalah urutan ke-3 yaitu <b>10</b>.\n\n" +
             "<b>Maka, Median = 10</b>\n" +
-            "<i>(Lihat batang 3D berwarna emas di tengah)</i>";
+            "<i>(Lihat diagram batang 3D terurut: Batang tengah ke-3 disorot warna emas)</i>";
 
         // Mean
-        listMateri[2].judul = "Mean (Rata-rata)";
+        listMateri[2].judul = "Mean (Nilai Rata-rata)";
         listMateri[2].isi = "<b>Mean</b> adalah nilai rata-rata dari sekumpulan data.\n" +
             "Rumus: <b>Jumlah Semua Nilai ÷ Banyak Data</b>\n\n" +
-            "<b>Contoh Data:</b>\n" +
-            "10, 12, 16, 11, 15, 16, 17, 10, 18, 13 (10 siswa)\n\n" +
-            "1. Jumlahkan semua:\n" +
-            "   10+12+16+11+15+16+17+10+18+13 = 138\n" +
-            "2. Banyak data = 10\n" +
+            "<b>Contoh Data (10 Siswa):</b>\n" +
+            "10, 12, 16, 11, 15, 16, 17, 10, 18, 13\n\n" +
+            "1. Total Nilai = 10+12+16+11+15+16+17+10+18+13 = 138\n" +
+            "2. Banyak Data = 10\n" +
             "3. Mean = 138 ÷ 10 = <b>13,8</b>\n\n" +
-            "<i>(Lihat bidang horizontal 3D berwarna toska: Garis rata-rata meratakan semua data)</i>";
+            "<i>(Lihat bidang horizontal toska di ketinggian 13,8: Menunjukkan konsep meratakan puncak data tinggi ke data yang rendah)</i>";
     }
 
     private void SpawnVisualizer(int index)
@@ -111,13 +111,13 @@ public class PDataManager : MonoBehaviour
         switch (index)
         {
             case 0:
-                BuildModusVisualizer(currentVisualizerRoot.transform);
+                BuildModusVisualizer();
                 break;
             case 1:
-                BuildMedianVisualizer(currentVisualizerRoot.transform);
+                BuildMedianVisualizer();
                 break;
             case 2:
-                BuildMeanVisualizer(currentVisualizerRoot.transform);
+                BuildMeanVisualizer();
                 break;
         }
     }
@@ -154,10 +154,9 @@ public class PDataManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tab 0: Visualisasi Modus (Data: 6[2x], 7[1x], 8[3x - Modus], 9[1x]).
-    /// Batang 8 diberi warna hijau cerah & aksen bintang/penanda.
+    /// Tab 0: Visualisasi Modus dengan animasi denyut pada batang frekuensi tertinggi (8).
     /// </summary>
-    private void BuildModusVisualizer(Transform parent)
+    private void BuildModusVisualizer()
     {
         int[] nilai = { 6, 7, 8, 9 };
         int[] frekuensi = { 2, 1, 3, 1 };
@@ -174,39 +173,39 @@ public class PDataManager : MonoBehaviour
 
             GameObject bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
             bar.name = $"Bar_Nilai_{nilai[i]}";
-            bar.transform.SetParent(parent, false);
+            bar.transform.SetParent(currentVisualizerRoot.transform, false);
             bar.transform.localPosition = new Vector3(posX, h * 0.5f, 0);
             bar.transform.localScale = new Vector3(barWidth, h, barWidth);
 
             if (isModus)
             {
-                SetMaterialColor(bar, new Color(0.2f, 0.95f, 0.35f));
+                SetMaterialColor(bar, new Color(0.18f, 0.98f, 0.38f));
+                bar.AddComponent<PulseAnimation>(); // Animasi denyut berulang
 
-                // Mahkota / penanda di atas batang modus
+                // Mahkota penanda di atas batang modus
                 GameObject crown = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                 crown.name = "CrownModus";
-                crown.transform.SetParent(parent, false);
+                crown.transform.SetParent(currentVisualizerRoot.transform, false);
                 crown.transform.localPosition = new Vector3(posX, h + 0.15f, 0);
                 crown.transform.localScale = Vector3.one * 0.18f;
                 SetMaterialColor(crown, new Color(1f, 0.85f, 0.1f));
 
-                Create3DLabel("MODUS!\nNilai 8 (3x)", new Vector3(posX, h + 0.45f, 0), parent, new Color(0.2f, 1f, 0.4f), 3.0f);
+                Create3DLabel("MODUS!\nNilai 8 (3x)", new Vector3(posX, h + 0.45f, 0), currentVisualizerRoot.transform, new Color(0.2f, 1f, 0.4f), 3.0f);
             }
             else
             {
                 SetMaterialColor(bar, new Color(0.35f, 0.6f, 0.9f));
-                Create3DLabel($"Nilai {nilai[i]}\n({frekuensi[i]}x)", new Vector3(posX, h + 0.25f, 0), parent, Color.white, 2.2f);
+                Create3DLabel($"Nilai {nilai[i]}\n({frekuensi[i]}x)", new Vector3(posX, h + 0.25f, 0), currentVisualizerRoot.transform, Color.white, 2.2f);
             }
         }
 
-        Create3DLabel("Modus = 8 (Frekuensi Tertinggi)", new Vector3(0, 1.8f, 0), parent, new Color(1f, 0.9f, 0.2f), 3.6f);
+        Create3DLabel("Modus = 8 (Frekuensi Tertinggi = 3 kali)", new Vector3(0, 1.85f, 0), currentVisualizerRoot.transform, new Color(1f, 0.9f, 0.2f), 3.6f);
     }
 
     /// <summary>
-    /// Tab 1: Visualisasi Median (Data Terurut: 4, 7, 10 [Median], 14, 18).
-    /// Batang tengah ke-3 (10) disorot warna Emas.
+    /// Tab 1: Visualisasi Median dengan susunan terurut dan penyorotan batang tengah (emas).
     /// </summary>
-    private void BuildMedianVisualizer(Transform parent)
+    private void BuildMedianVisualizer()
     {
         int[] dataSorted = { 4, 7, 10, 14, 18 };
         float barWidth = 0.32f;
@@ -218,33 +217,34 @@ public class PDataManager : MonoBehaviour
         {
             float posX = startX + i * spacing;
             float h = dataSorted[i] * heightScale;
-            bool isMedian = (i == 2); // Indeks tengah
+            bool isMedian = (i == 2);
 
             GameObject bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
             bar.name = $"Bar_Median_{dataSorted[i]}";
-            bar.transform.SetParent(parent, false);
+            bar.transform.SetParent(currentVisualizerRoot.transform, false);
             bar.transform.localPosition = new Vector3(posX, h * 0.5f, 0);
             bar.transform.localScale = new Vector3(barWidth, h, barWidth);
 
             if (isMedian)
             {
                 SetMaterialColor(bar, new Color(1f, 0.85f, 0.1f));
-                Create3DLabel($"MEDIAN = {dataSorted[i]}\n(Urutan ke-3)", new Vector3(posX, h + 0.35f, 0), parent, new Color(1f, 0.9f, 0.2f), 3.0f);
+                bar.AddComponent<PulseAnimation>();
+                Create3DLabel($"MEDIAN = {dataSorted[i]}\n(Urutan ke-3)", new Vector3(posX, h + 0.35f, 0), currentVisualizerRoot.transform, new Color(1f, 0.9f, 0.2f), 3.0f);
             }
             else
             {
                 SetMaterialColor(bar, new Color(0.45f, 0.55f, 0.75f));
-                Create3DLabel($"ke-{i + 1}\n({dataSorted[i]})", new Vector3(posX, h + 0.25f, 0), parent, Color.white, 2.2f);
+                Create3DLabel($"ke-{i + 1}\n({dataSorted[i]})", new Vector3(posX, h + 0.25f, 0), currentVisualizerRoot.transform, Color.white, 2.2f);
             }
         }
 
-        Create3DLabel("Median: Nilai Tepat di Tengah Data Terurut", new Vector3(0, 2.0f, 0), parent, new Color(0.3f, 0.9f, 1f), 3.5f);
+        Create3DLabel("Median: Nilai Tepat di Tengah Data Terurut", new Vector3(0, 2.0f, 0), currentVisualizerRoot.transform, new Color(0.3f, 0.9f, 1f), 3.5f);
     }
 
     /// <summary>
-    /// Tab 2: Visualisasi Mean (10 Data dengan bidang horizontal rata-rata setinggi 13,8).
+    /// Tab 2: Visualisasi Mean dengan bidang horizontal transparan di ketinggian 13,8.
     /// </summary>
-    private void BuildMeanVisualizer(Transform parent)
+    private void BuildMeanVisualizer()
     {
         int[] data = { 10, 12, 16, 11, 15, 16, 17, 10, 18, 13 };
         float barWidth = 0.2f;
@@ -259,26 +259,25 @@ public class PDataManager : MonoBehaviour
 
             GameObject bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
             bar.name = $"Bar_Data_{i}_{data[i]}";
-            bar.transform.SetParent(parent, false);
+            bar.transform.SetParent(currentVisualizerRoot.transform, false);
             bar.transform.localPosition = new Vector3(posX, h * 0.5f, 0);
             bar.transform.localScale = new Vector3(barWidth, h, barWidth);
             SetMaterialColor(bar, new Color(0.35f, 0.65f, 0.95f));
         }
 
-        // Garis/Bidang Horizontal Rata-Rata (Mean = 13.8)
         float meanValue = 13.8f;
         float meanY = meanValue * heightScale;
         float totalWidth = (data.Length * spacing) + 0.2f;
 
         GameObject meanPlane = GameObject.CreatePrimitive(PrimitiveType.Cube);
         meanPlane.name = "MeanHorizontalLine";
-        meanPlane.transform.SetParent(parent, false);
+        meanPlane.transform.SetParent(currentVisualizerRoot.transform, false);
         meanPlane.transform.localPosition = new Vector3(0, meanY, 0);
         meanPlane.transform.localScale = new Vector3(totalWidth, 0.04f, 0.35f);
         SetMaterialColor(meanPlane, new Color(0.1f, 0.95f, 0.85f));
 
-        Create3DLabel("--- Garis Rata-Rata (Mean = 13,8) ---", new Vector3(0, meanY + 0.22f, 0), parent, new Color(0.1f, 1f, 0.9f), 2.8f);
-        Create3DLabel("Mean = Total Nilai (138) ÷ Banyak Data (10) = 13,8", new Vector3(0, 1.8f, 0), parent, new Color(1f, 0.9f, 0.2f), 3.4f);
+        Create3DLabel("--- Garis Rata-Rata (Mean = 13,8) ---", new Vector3(0, meanY + 0.22f, 0), currentVisualizerRoot.transform, new Color(0.1f, 1f, 0.9f), 2.8f);
+        Create3DLabel("Mean = Total Nilai (138) ÷ Banyak Data (10) = 13,8", new Vector3(0, 1.85f, 0), currentVisualizerRoot.transform, new Color(1f, 0.9f, 0.2f), 3.4f);
     }
 
     private void SetMaterialColor(GameObject obj, Color color)
@@ -304,5 +303,26 @@ public class PDataManager : MonoBehaviour
         tmp.color = color;
         labelObj.transform.localScale = Vector3.one * 0.35f;
         return labelObj;
+    }
+}
+
+/// <summary>
+/// Komponen animasi denyut skala untuk menyorot elemen penting statistik (Modus / Median).
+/// </summary>
+public class PulseAnimation : MonoBehaviour
+{
+    private Vector3 baseScale;
+    private float timer;
+
+    void Start()
+    {
+        baseScale = transform.localScale;
+    }
+
+    void Update()
+    {
+        timer += Time.deltaTime * 3.5f;
+        float factor = 1f + 0.08f * Mathf.Sin(timer);
+        transform.localScale = new Vector3(baseScale.x * factor, baseScale.y, baseScale.z * factor);
     }
 }

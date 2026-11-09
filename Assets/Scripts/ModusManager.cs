@@ -2,7 +2,8 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Kuis menentukan modus dari kumpulan data sesuai kurikulum Matematika SD.
+/// Kuis menentukan modus dari kumpulan data sesuai kurikulum Matematika SD
+/// dengan 50% soal cerita kontekstual dan sistem petunjuk.
 /// </summary>
 public class ModusManager : BaseQuizManager<int>
 {
@@ -20,14 +21,12 @@ public class ModusManager : BaseQuizManager<int>
         GradePhase phase = GradeLevelConfig.CurrentPhase;
         if (phase == GradePhase.FaseA || phase == GradePhase.FaseB)
         {
-            // Fase A & B (Kelas 1-4 SD): 5-7 data, nilai 1-20, modus sangat jelas
             totalData = Random.Range(5, 8);
             jumlahDataUnik = Random.Range(2, 4);
             maxVal = 20;
         }
         else
         {
-            // Fase C (Kelas 5-6 SD): 7-12 data, nilai 1-50
             totalData = Random.Range(7, 13);
             jumlahDataUnik = Random.Range(3, 5);
             maxVal = 50;
@@ -40,7 +39,6 @@ public class ModusManager : BaseQuizManager<int>
         }
 
         int modus = numbers[Random.Range(0, numbers.Count)];
-        // Pastikan modus muncul paling banyak
         int targetModusCount = (totalData / 2) + 1;
         int countModus = 0;
         foreach (int x in numbers) { if (x == modus) countModus++; }
@@ -60,7 +58,7 @@ public class ModusManager : BaseQuizManager<int>
             else numbers.Add(Random.Range(1, maxVal + 1));
         }
 
-        // Acak urutan data tampilan (Fisher-Yates)
+        // Acak urutan data tampilan
         for (int i = numbers.Count - 1; i > 0; i--)
         {
             int rnd = Random.Range(0, i + 1);
@@ -79,7 +77,26 @@ public class ModusManager : BaseQuizManager<int>
 
         int modusCount = frekuensiMap[modus];
         string numberString = string.Join(", ", numbers.ConvertAll(n => n.ToString()).ToArray());
-        soalSaatIni = $"Tentukan modus dari data berikut:\n{numberString}";
+
+        // 50% Soal Cerita Kontekstual vs 50% Numerik
+        bool isSoalCerita = Random.value < 0.5f;
+        string barang = GradeLevelConfig.GetRandomItemName();
+
+        if (isSoalCerita)
+        {
+            if (phase == GradePhase.FaseA || phase == GradePhase.FaseB)
+            {
+                soalSaatIni = $"Data jumlah {barang} yang dibeli oleh beberapa anak adalah:\n{numberString}\nBerapa jumlah {barang} yang paling banyak dibeli (modus)?";
+            }
+            else
+            {
+                soalSaatIni = $"Data nomor sepatu dari {totalData} siswa kelas 5 SD adalah:\n{numberString}\nBerapa ukuran nomor sepatu yang menjadi modus data tersebut?";
+            }
+        }
+        else
+        {
+            soalSaatIni = $"Tentukan modus dari data berikut:\n{numberString}";
+        }
 
         List<string> freqLines = new List<string>();
         foreach (var kvp in frekuensiMap)
@@ -92,6 +109,8 @@ public class ModusManager : BaseQuizManager<int>
             "1. Hitung frekuensi setiap angka:\n" + string.Join("\n", freqLines.ToArray()) + "\n" +
             $"2. Angka {modus} memiliki kemunculan terbanyak ({modusCount} kali).\n" +
             $"Maka, Modus = {modus}.";
+
+        petunjukSoal = "Ingat pengertian Modus:\nModus = Nilai yang paling banyak atau paling sering muncul.\nHitung berapa kali masing-masing angka muncul dalam data.";
 
         questionText.text = soalSaatIni;
         BuatPilihan(modus);

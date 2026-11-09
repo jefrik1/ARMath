@@ -3,7 +3,10 @@ using UnityEngine.UI;
 using TMPro;
 
 /// <summary>
-/// Manajer Materi Pecahan dengan Visualisasi 3D AR Prosedural (Matematika SD).
+/// Manajer Materi Pecahan dengan Visualisasi 3D AR Prosedural (Kurikulum SD):
+/// 1. Piringan Pecahan 3D (Fraction Disk / Pizza)
+/// 2. Pecahan Senilai, Desimal & Persen (1/2 = 2/4 = 0.5 = 50%)
+/// 3. Batang Pecahan 3D Dinamis dengan Tombol Interaktif [+] dan [-]
 /// </summary>
 public class PPecahanManager : MonoBehaviour
 {
@@ -27,6 +30,11 @@ public class PPecahanManager : MonoBehaviour
     private DataMateri[] listMateri;
     private GameObject currentVisualizerRoot;
 
+    // Nilai manipulasi interaktif untuk siswa
+    private int interactivePembilang = 1;
+    private int interactivePenyebut = 2;
+    private int activeTab = 0;
+
     void Start()
     {
         InisialisasiMateri();
@@ -39,12 +47,17 @@ public class PPecahanManager : MonoBehaviour
         for (int i = 0; i < tombolMenu.Length; i++)
         {
             int index = i;
-            tombolMenu[i].onClick.AddListener(() => TampilkanMateri(index));
+            tombolMenu[i].onClick.AddListener(() =>
+            {
+                MathSoundFX.PlayClick();
+                TampilkanMateri(index);
+            });
         }
     }
 
     void TampilkanMateri(int index)
     {
+        activeTab = index;
         if (index >= 0 && index < listMateri.Length)
         {
             textJudul.text = listMateri[index].judul;
@@ -60,36 +73,31 @@ public class PPecahanManager : MonoBehaviour
         listMateri[0].judul = "Definisi Pecahan";
         listMateri[0].isi = "<b>Pecahan</b> adalah bilangan yang menunjukkan bagian dari keseluruhan.\n\n" +
             "Pecahan terdiri dari dua bagian:\n" +
-            "1. <b>Pembilang</b> (bagian atas): Bagian yang diambil/dimiliki\n" +
-            "2. <b>Penyebut</b> (bagian bawah): Total seluruh bagian yang sama besar\n\n" +
-            "<i>Perhatikan model 3D di layar: Silinder dibagi 2 sama besar, 1 bagian berwarna biru mewakili pecahan 1/2.</i>";
+            "1. <b>Pembilang (atas):</b> Jumlah bagian yang diambil atau dimiliki.\n" +
+            "2. <b>Penyebut (bawah):</b> Jumlah seluruh potongan yang sama besar.\n\n" +
+            "<i>(Gunakan tombol [+] dan [-] pada model 3D untuk memanipulasi pecahan secara langsung!)</i>";
 
-        listMateri[1].judul = "Jenis-Jenis Pecahan";
-        listMateri[1].isi = "<b>1. Pecahan Biasa</b> (Contoh: 3/4)\n" +
-            "Pembilang lebih kecil dari penyebut (bagian dari 1 keutuhan).\n\n" +
-            "<b>2. Pecahan Campuran</b> (Contoh: 1 1/2)\n" +
-            "Gabungan bilangan bulat dan pecahan (1 balok utuh + 1/2 balok).\n\n" +
-            "<b>3. Pecahan Desimal</b> (Contoh: 0,5 = 1/2)\n\n" +
-            "<b>4. Persen (%)</b> (Contoh: 75% = 3/4)";
+        listMateri[1].judul = "Pecahan Senilai, Desimal, & Persen";
+        listMateri[1].isi = "Pecahan dapat dinyatakan dalam bentuk lain yang nilainya sama:\n\n" +
+            "• <b>Pecahan Senilai:</b> 1/2 = 2/4 = 3/6\n" +
+            "• <b>Bentuk Desimal:</b> 1/2 = 0,5 (1 ÷ 2)\n" +
+            "• <b>Bentuk Persen (%):</b> 1/2 = 50% (50 per seratus)\n\n" +
+            "<i>Perhatikan perbandingan visual disk 3D antara 1/2 dan 2/4 di layar.</i>";
 
-        listMateri[2].judul = "Operasi pada Pecahan";
-        listMateri[2].isi = "<b>Penjumlahan & Pengurangan:</b>\n" +
-            "Hanya bisa dijumlahkan jika <b>penyebutnya sama</b>.\n" +
-            "Jika berbeda, samakan penyebut terlebih dahulu menggunakan KPK.\n\n" +
-            "<b>Perkalian:</b>\n" +
-            "Kalikan langsung: Pembilang x Pembilang, Penyebut x Penyebut.\n\n" +
-            "<b>Pembagian:</b>\n" +
-            "Balik pecahan kedua, lalu kalikan langsung.";
-
-        listMateri[3].judul = "Contoh Operasi Hitung";
-        listMateri[3].isi = "<b>1. Penjumlahan (Samakan Penyebut)</b>\n" +
+        listMateri[2].judul = "Operasi Penjumlahan Pecahan";
+        listMateri[2].isi = "<b>Penjumlahan Pecahan:</b>\n" +
+            "Jika penyebut berbeda, cari <b>KPK</b> penyebutnya terlebih dahulu.\n\n" +
+            "<b>Contoh:</b>\n" +
             "2/3 + 1/6\n" +
             "= 4/6 + 1/6\n" +
-            "= <b>5/6</b> (4 bagian biru + 1 bagian oranye dari total 6 bagian)\n\n" +
-            "<b>2. Perkalian (Langsung)</b>\n" +
+            "= <b>5/6</b>\n\n" +
+            "<i>(Lihat batang 3D tersegmentasi 6 bagian: 4 bagian biru + 1 oranye = 5 bagian terisi)</i>";
+
+        listMateri[3].judul = "Perkalian & Pembagian Pecahan";
+        listMateri[3].isi = "<b>1. Perkalian Pecahan (Kalikan Langsung):</b>\n" +
             "3/4 x 2/5 = (3 x 2) / (4 x 5) = 6/20 = <b>3/10</b>\n\n" +
-            "<b>3. Pembagian (Balik & Kali)</b>\n" +
-            "3/4 : 2/5 = 3/4 x 5/2 = <b>15/8 = 1 7/8</b>";
+            "<b>2. Pembagian Pecahan (Balik Pecahan Kedua):</b>\n" +
+            "3/4 ÷ 2/5 = 3/4 x 5/2 = <b>15/8 = 1 7/8</b>";
     }
 
     private void SpawnVisualizer(int index)
@@ -101,21 +109,19 @@ public class PPecahanManager : MonoBehaviour
 
         currentVisualizerRoot = new GameObject("VisualizerPecahan3D");
         SetupRootTransform(currentVisualizerRoot);
-
-        // Tambahkan RotasiSentuh agar interaktif diputar jari/mouse
         currentVisualizerRoot.AddComponent<RotasiSentuh>();
 
         switch (index)
         {
             case 0:
-                BuildDefinisiVisualizer(currentVisualizerRoot.transform);
+                BuildInteractiveFractionDisk();
                 break;
             case 1:
-                BuildJenisVisualizer(currentVisualizerRoot.transform);
+                BuildPecahanSenilaiDesimalPersen();
                 break;
             case 2:
             case 3:
-                BuildOperasiVisualizer(currentVisualizerRoot.transform);
+                BuildOperasiBatangVisualizer();
                 break;
         }
     }
@@ -152,82 +158,140 @@ public class PPecahanManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Tab 0: Definisi 1/2 (Silinder dipotong menjadi 2 bagian dengan celah kecil).
+    /// Tab 0: Piringan Pecahan 3D Interaktif dengan Tombol [+] dan [-]
     /// </summary>
-    private void BuildDefinisiVisualizer(Transform parent)
+    private void BuildInteractiveFractionDisk()
     {
         float radius = 0.6f;
-        float height = 0.35f;
+        float height = 0.3f;
+        float anglePerSlice = 360f / interactivePenyebut;
 
-        // Belahan Biru (1/2 aktif - Pembilang)
-        GameObject sliceA = CreatePieSliceObject("Half_Blue_1_2", 0f, 180f, radius, height, new Color(0.2f, 0.6f, 1f));
-        sliceA.transform.SetParent(parent, false);
-        sliceA.transform.localPosition = new Vector3(0, 0, 0.04f);
-
-        // Belahan Abu-abu (1/2 pelengkap - Penyebut)
-        GameObject sliceB = CreatePieSliceObject("Half_White_1_2", 180f, 360f, radius, height, new Color(0.85f, 0.88f, 0.92f));
-        sliceB.transform.SetParent(parent, false);
-        sliceB.transform.localPosition = new Vector3(0, 0, -0.04f);
-
-        Create3DLabel("1/2\n(Pembilang: 1 Bagian)", new Vector3(0, height + 0.2f, 0.35f), parent, new Color(0.2f, 0.7f, 1f), 3.2f);
-        Create3DLabel("1/2\n(Total Penyebut: 2)", new Vector3(0, height + 0.2f, -0.35f), parent, Color.white, 2.6f);
-        Create3DLabel("Model Pecahan 1/2", new Vector3(0, height + 0.65f, 0), parent, new Color(1f, 0.9f, 0.2f), 3.8f);
-    }
-
-    /// <summary>
-    /// Tab 1: Jenis-Jenis Pecahan (Pecahan Campuran 1 1/2 di kiri & Pecahan Biasa 3/4 di kanan).
-    /// </summary>
-    private void BuildJenisVisualizer(Transform parent)
-    {
-        // KIRI: Pecahan Campuran 1 1/2
-        GameObject kiriRoot = new GameObject("PecahanCampuranRoot");
-        kiriRoot.transform.SetParent(parent, false);
-        kiriRoot.transform.localPosition = new Vector3(-0.9f, 0, 0);
-
-        // Balok 1 Utuh
-        GameObject cubeUtuh = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cubeUtuh.name = "CubeUtuh";
-        cubeUtuh.transform.SetParent(kiriRoot.transform, false);
-        cubeUtuh.transform.localPosition = new Vector3(-0.35f, 0, 0);
-        cubeUtuh.transform.localScale = new Vector3(0.5f, 0.5f, 0.5f);
-        SetMaterialColor(cubeUtuh, new Color(1f, 0.55f, 0.15f));
-
-        // Balok 1/2
-        GameObject cubeSetengah = GameObject.CreatePrimitive(PrimitiveType.Cube);
-        cubeSetengah.name = "CubeSetengah";
-        cubeSetengah.transform.SetParent(kiriRoot.transform, false);
-        cubeSetengah.transform.localPosition = new Vector3(0.2f, -0.125f, 0);
-        cubeSetengah.transform.localScale = new Vector3(0.5f, 0.25f, 0.5f);
-        SetMaterialColor(cubeSetengah, new Color(1f, 0.8f, 0.2f));
-
-        Create3DLabel("1 Utuh", new Vector3(-0.35f, 0.4f, 0), kiriRoot.transform, Color.white, 2.4f);
-        Create3DLabel("1/2", new Vector3(0.2f, 0.4f, 0), kiriRoot.transform, Color.white, 2.4f);
-        Create3DLabel("Campuran:\n1 1/2", new Vector3(0, 0.75f, 0), kiriRoot.transform, new Color(1f, 0.7f, 0.2f), 3f);
-
-        // KANAN: Pecahan Biasa 3/4 (Pie 4 Bagian: 3 Hijau, 1 Transparan)
-        GameObject kananRoot = new GameObject("PecahanBiasaRoot");
-        kananRoot.transform.SetParent(parent, false);
-        kananRoot.transform.localPosition = new Vector3(0.9f, 0, 0);
-
-        float r = 0.45f;
-        float h = 0.25f;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < interactivePenyebut; i++)
         {
-            float start = i * 90f;
-            float end = (i + 1) * 90f;
-            Color c = (i < 3) ? new Color(0.2f, 0.85f, 0.35f) : new Color(0.7f, 0.7f, 0.75f, 0.4f);
-            GameObject slice = CreatePieSliceObject($"PieSlice_{i}", start, end, r, h, c);
-            slice.transform.SetParent(kananRoot.transform, false);
-            slice.transform.localPosition = Vector3.zero;
+            float start = i * anglePerSlice;
+            float end = (i + 1) * anglePerSlice;
+            bool isActive = (i < interactivePembilang);
+            Color sliceColor = isActive ? new Color(0.18f, 0.6f, 0.95f) : new Color(0.85f, 0.88f, 0.92f);
+
+            GameObject slice = CreatePieSliceObject($"Slice_{i}", start, end, radius, height, sliceColor);
+            slice.transform.SetParent(currentVisualizerRoot.transform, false);
+
+            if (isActive)
+            {
+                float midRad = (start + end) * 0.5f * 0.0174532925f;
+                slice.transform.localPosition = new Vector3(Mathf.Sin(midRad) * 0.04f, 0, Mathf.Cos(midRad) * 0.04f);
+            }
         }
 
-        Create3DLabel("Pecahan Biasa:\n3/4", new Vector3(0, 0.75f, 0), kananRoot.transform, new Color(0.3f, 0.9f, 0.4f), 3f);
+        Create3DLabel($"Pecahan: {interactivePembilang}/{interactivePenyebut}", new Vector3(0, 0.65f, 0), currentVisualizerRoot.transform, new Color(1f, 0.85f, 0.1f), 3.4f);
+        Create3DLabel($"Pembilang: {interactivePembilang} bagian | Penyebut: {interactivePenyebut} potong", new Vector3(0, -0.65f, 0), currentVisualizerRoot.transform, Color.white, 2.2f);
+
+        CreateInteractiveControlPills();
+    }
+
+    private void CreateInteractiveControlPills()
+    {
+        GameObject controlsGo = new GameObject("FractionControls", typeof(RectTransform));
+        controlsGo.transform.SetParent(currentVisualizerRoot.transform, false);
+        controlsGo.transform.localPosition = new Vector3(0, -0.95f, 0);
+
+        // Tombol Tambah Pembilang
+        Create3DControlPill(controlsGo.transform, new Vector3(-0.45f, 0, 0), "+ Pembilang", () =>
+        {
+            if (interactivePembilang < interactivePenyebut)
+            {
+                interactivePembilang++;
+                SpawnVisualizer(0);
+            }
+        });
+
+        // Tombol Kurang Pembilang
+        Create3DControlPill(controlsGo.transform, new Vector3(-0.15f, 0, 0), "- Pembilang", () =>
+        {
+            if (interactivePembilang > 1)
+            {
+                interactivePembilang--;
+                SpawnVisualizer(0);
+            }
+        });
+
+        // Tombol Tambah Penyebut
+        Create3DControlPill(controlsGo.transform, new Vector3(0.15f, 0, 0), "+ Penyebut", () =>
+        {
+            if (interactivePenyebut < 8)
+            {
+                interactivePenyebut++;
+                SpawnVisualizer(0);
+            }
+        });
+
+        // Tombol Kurang Penyebut
+        Create3DControlPill(controlsGo.transform, new Vector3(0.45f, 0, 0), "- Penyebut", () =>
+        {
+            if (interactivePenyebut > 2)
+            {
+                interactivePenyebut--;
+                if (interactivePembilang > interactivePenyebut) interactivePembilang = interactivePenyebut;
+                SpawnVisualizer(0);
+            }
+        });
+    }
+
+    private void Create3DControlPill(Transform parent, Vector3 localPos, string text, System.Action onClick)
+    {
+        GameObject pill = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        pill.name = "Pill_" + text;
+        pill.transform.SetParent(parent, false);
+        pill.transform.localPosition = localPos;
+        pill.transform.localScale = new Vector3(0.25f, 0.12f, 0.05f);
+        SetMaterialColor(pill, new Color(0.2f, 0.25f, 0.35f));
+
+        Create3DLabel(text, new Vector3(0, 0, -0.06f), pill.transform, Color.white, 1.8f);
+
+        // Interaksi klik mouse/touch pada kubus pill
+        BoxCollider bc = pill.GetComponent<BoxCollider>();
+        if (bc != null)
+        {
+            pill.AddComponent<PillClickHandler>().onClickAction = onClick;
+        }
     }
 
     /// <summary>
-    /// Tab 2 & 3: Operasi Penjumlahan (2/3 + 1/6 = 4/6 + 1/6 = 5/6).
+    /// Tab 1: Pecahan Senilai & Desimal/Persen (1/2 = 2/4 = 0.5 = 50%)
     /// </summary>
-    private void BuildOperasiVisualizer(Transform parent)
+    private void BuildPecahanSenilaiDesimalPersen()
+    {
+        // KIRI: Disk 1/2
+        GameObject kiri = new GameObject("Disk_1_2");
+        kiri.transform.SetParent(currentVisualizerRoot.transform, false);
+        kiri.transform.localPosition = new Vector3(-0.75f, 0, 0);
+
+        GameObject s1 = CreatePieSliceObject("Slice1", 0, 180, 0.45f, 0.2f, new Color(0.2f, 0.6f, 1f));
+        s1.transform.SetParent(kiri.transform, false);
+        GameObject s2 = CreatePieSliceObject("Slice2", 180, 360, 0.45f, 0.2f, new Color(0.85f, 0.88f, 0.92f));
+        s2.transform.SetParent(kiri.transform, false);
+        Create3DLabel("1/2\n= 0,5\n= 50%", new Vector3(0, 0.6f, 0), kiri.transform, new Color(0.3f, 0.8f, 1f), 2.5f);
+
+        // KANAN: Disk 2/4 (Senilai)
+        GameObject kanan = new GameObject("Disk_2_4");
+        kanan.transform.SetParent(currentVisualizerRoot.transform, false);
+        kanan.transform.localPosition = new Vector3(0.75f, 0, 0);
+
+        for (int i = 0; i < 4; i++)
+        {
+            Color c = (i < 2) ? new Color(0.2f, 0.85f, 0.35f) : new Color(0.85f, 0.88f, 0.92f);
+            GameObject sl = CreatePieSliceObject($"Slice4_{i}", i * 90f, (i + 1) * 90f, 0.45f, 0.2f, c);
+            sl.transform.SetParent(kanan.transform, false);
+        }
+        Create3DLabel("2/4\n= 0,5\n= 50%", new Vector3(0, 0.6f, 0), kanan.transform, new Color(0.3f, 0.95f, 0.4f), 2.5f);
+
+        Create3DLabel("Pecahan Senilai: 1/2 = 2/4 = 0,5 = 50%", new Vector3(0, 1.15f, 0), currentVisualizerRoot.transform, new Color(1f, 0.9f, 0.2f), 3.2f);
+    }
+
+    /// <summary>
+    /// Tab 2 & 3: Batang Tersegmentasi Operasi Penjumlahan (2/3 + 1/6 = 4/6 + 1/6 = 5/6)
+    /// </summary>
+    private void BuildOperasiBatangVisualizer()
     {
         int totalSegments = 6;
         float barWidth = 0.32f;
@@ -239,7 +303,7 @@ public class PPecahanManager : MonoBehaviour
         {
             GameObject seg = GameObject.CreatePrimitive(PrimitiveType.Cube);
             seg.name = $"Segment_{i}";
-            seg.transform.SetParent(parent, false);
+            seg.transform.SetParent(currentVisualizerRoot.transform, false);
             seg.transform.localPosition = new Vector3(startX + i * (barWidth + 0.02f), 0, 0);
             seg.transform.localScale = new Vector3(barWidth, barHeight, barDepth);
 
@@ -257,9 +321,9 @@ public class PPecahanManager : MonoBehaviour
             }
         }
 
-        Create3DLabel("2/3 = 4/6 (Biru)", new Vector3(-0.4f, 0.4f, 0), parent, new Color(0.3f, 0.7f, 1f), 2.5f);
-        Create3DLabel("+ 1/6 (Oranye)", new Vector3(0.5f, 0.4f, 0), parent, new Color(1f, 0.7f, 0.2f), 2.5f);
-        Create3DLabel("Hasil: 4/6 + 1/6 = 5/6 Bagian Terisi", new Vector3(0, 0.8f, 0), parent, new Color(0.3f, 1f, 0.5f), 3.4f);
+        Create3DLabel("2/3 = 4/6 (Biru)", new Vector3(-0.4f, 0.4f, 0), currentVisualizerRoot.transform, new Color(0.3f, 0.7f, 1f), 2.5f);
+        Create3DLabel("+ 1/6 (Oranye)", new Vector3(0.5f, 0.4f, 0), currentVisualizerRoot.transform, new Color(1f, 0.7f, 0.2f), 2.5f);
+        Create3DLabel("Hasil: 4/6 + 1/6 = 5/6 Bagian Terisi", new Vector3(0, 0.95f, 0), currentVisualizerRoot.transform, new Color(0.3f, 1f, 0.5f), 3.4f);
     }
 
     private GameObject CreatePieSliceObject(string name, float startAngle, float endAngle, float radius, float height, Color color)
@@ -279,8 +343,8 @@ public class PPecahanManager : MonoBehaviour
         var tris = new System.Collections.Generic.List<int>();
 
         float halfH = height * 0.5f;
-        verts.Add(new Vector3(0, halfH, 0));  // 0: top center
-        verts.Add(new Vector3(0, -halfH, 0)); // 1: bottom center
+        verts.Add(new Vector3(0, halfH, 0));
+        verts.Add(new Vector3(0, -halfH, 0));
 
         int topRimStart = verts.Count;
         for (int i = 0; i <= segments; i++)
@@ -319,33 +383,18 @@ public class PPecahanManager : MonoBehaviour
             int brA = botRimStart + i;
             int brB = botRimStart + i + 1;
 
-            tris.Add(trA);
-            tris.Add(brA);
-            tris.Add(trB);
-
-            tris.Add(trB);
-            tris.Add(brA);
-            tris.Add(brB);
+            tris.Add(trA); tris.Add(brA); tris.Add(trB);
+            tris.Add(trB); tris.Add(brA); tris.Add(brB);
         }
 
-        tris.Add(0);
-        tris.Add(topRimStart);
-        tris.Add(botRimStart);
-
-        tris.Add(0);
-        tris.Add(botRimStart);
-        tris.Add(1);
+        tris.Add(0); tris.Add(topRimStart); tris.Add(botRimStart);
+        tris.Add(0); tris.Add(botRimStart); tris.Add(1);
 
         int topRimEnd = topRimStart + segments;
         int botRimEnd = botRimStart + segments;
 
-        tris.Add(0);
-        tris.Add(botRimEnd);
-        tris.Add(topRimEnd);
-
-        tris.Add(0);
-        tris.Add(1);
-        tris.Add(botRimEnd);
+        tris.Add(0); tris.Add(botRimEnd); tris.Add(topRimEnd);
+        tris.Add(0); tris.Add(1); tris.Add(botRimEnd);
 
         mesh.SetVertices(verts);
         mesh.SetTriangles(tris, 0);
@@ -377,5 +426,19 @@ public class PPecahanManager : MonoBehaviour
         tmp.color = color;
         labelObj.transform.localScale = Vector3.one * 0.35f;
         return labelObj;
+    }
+}
+
+/// <summary>
+/// Handler klik interaktif pada tombol pill 3D.
+/// </summary>
+public class PillClickHandler : MonoBehaviour
+{
+    public System.Action onClickAction;
+
+    private void OnMouseDown()
+    {
+        MathSoundFX.PlayClick();
+        onClickAction?.Invoke();
     }
 }

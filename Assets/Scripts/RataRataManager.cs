@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Kuis rata-rata (mean) data statistika SD sesuai fase kurikulum.
+/// Kuis rata-rata (mean) data statistika SD sesuai fase kurikulum dengan 50% soal cerita kontekstual dan sistem petunjuk.
 /// </summary>
 public class RataRataManager : MonoBehaviour, IQuizManager
 {
@@ -20,6 +20,8 @@ public class RataRataManager : MonoBehaviour, IQuizManager
     public HealthManager healthManager;
     public ItemSpawner itemSpawner;
 
+    public string petunjukSoal;
+
     private int jawabanSoalBenar;
     private string pilihanBenar;
     private string jawabanPilihanPemain;
@@ -30,13 +32,75 @@ public class RataRataManager : MonoBehaviour, IQuizManager
     private List<GameObject> objekPilihanAktif = new List<GameObject>();
     private GameObject objekTerpilih;
     private string[] huruf = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K" };
+    private Button hintButton;
 
     void Start()
     {
-        checkButton.onClick.AddListener(CekJawaban);
-        undoButton.onClick.AddListener(UndoJawaban);
+        if (checkButton != null) checkButton.onClick.AddListener(CekJawaban);
+        if (undoButton != null) undoButton.onClick.AddListener(UndoJawaban);
         if (ScoreManager.instance != null) ScoreManager.instance.ResetScore();
+
+        SetupHintButton();
         GenerateRandomQuestion();
+    }
+
+    private void SetupHintButton()
+    {
+        if (checkButton == null) return;
+        Transform parent = checkButton.transform.parent;
+        if (parent == null) return;
+
+        Transform existing = parent.Find("Btn_Petunjuk");
+        if (existing != null)
+        {
+            hintButton = existing.GetComponent<Button>();
+            if (hintButton != null)
+            {
+                hintButton.onClick.RemoveAllListeners();
+                hintButton.onClick.AddListener(TampilkanPetunjuk);
+            }
+            return;
+        }
+
+        GameObject hintGo = new GameObject("Btn_Petunjuk", typeof(RectTransform), typeof(Image), typeof(Button));
+        hintGo.transform.SetParent(parent, false);
+
+        RectTransform checkRt = checkButton.GetComponent<RectTransform>();
+        RectTransform hintRt = hintGo.GetComponent<RectTransform>();
+
+        hintRt.anchorMin = checkRt.anchorMin;
+        hintRt.anchorMax = checkRt.anchorMax;
+        hintRt.pivot = checkRt.pivot;
+        hintRt.sizeDelta = new Vector2(checkRt.sizeDelta.x * 0.9f, checkRt.sizeDelta.y);
+        hintRt.anchoredPosition = checkRt.anchoredPosition + new Vector2(checkRt.sizeDelta.x + 20f, 0f);
+
+        Image img = hintGo.GetComponent<Image>();
+        img.color = new Color(0.95f, 0.72f, 0.12f);
+
+        GameObject textGo = new GameObject("Text", typeof(RectTransform), typeof(TextMeshProUGUI));
+        textGo.transform.SetParent(hintGo.transform, false);
+        TextMeshProUGUI tmp = textGo.GetComponent<TextMeshProUGUI>();
+        tmp.text = "💡 Petunjuk";
+        tmp.fontSize = 20;
+        tmp.fontStyle = FontStyles.Bold;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = Color.white;
+
+        RectTransform textRt = textGo.GetComponent<RectTransform>();
+        textRt.anchorMin = Vector2.zero;
+        textRt.anchorMax = Vector2.one;
+        textRt.offsetMin = Vector2.zero;
+        textRt.offsetMax = Vector2.zero;
+
+        hintButton = hintGo.GetComponent<Button>();
+        hintButton.onClick.AddListener(TampilkanPetunjuk);
+    }
+
+    public void TampilkanPetunjuk()
+    {
+        MathSoundFX.PlayClick();
+        string isi = !string.IsNullOrEmpty(petunjukSoal) ? petunjukSoal : "Rumus Mean = Jumlahkan seluruh nilai lalu bagi dengan banyaknya data.";
+        if (popupManager != null) popupManager.ShowPembahasan("💡 PETUNJUK PENYELESAIAN:\n\n" + isi);
     }
 
     public void GenerateRandomQuestion()
@@ -51,8 +115,8 @@ public class RataRataManager : MonoBehaviour, IQuizManager
         objekTerpilih = null;
 
         GradePhase phase = GradeLevelConfig.CurrentPhase;
-        int jumlahElemen = (phase == GradePhase.FaseC) ? Random.Range(5, 9) : Random.Range(3, 6);
-        int rataRata = (phase == GradePhase.FaseC) ? Random.Range(10, 40) : Random.Range(4, 12);
+        int jumlahElemen = (phase == GradePhase.FaseC) ? Random.Range(5, 8) : Random.Range(3, 5);
+        int rataRata = (phase == GradePhase.FaseC) ? Random.Range(10, 30) : Random.Range(4, 10);
         int totalSum = rataRata * jumlahElemen;
 
         List<int> numbers = new List<int>();
@@ -60,7 +124,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
 
         for (int i = 0; i < jumlahElemen - 1; i++)
         {
-            int deviation = Random.Range(-4, 5);
+            int deviation = Random.Range(-3, 4);
             int val = Mathf.Max(1, rataRata + deviation);
             numbers.Add(val);
             currentSum += val;
@@ -79,11 +143,33 @@ public class RataRataManager : MonoBehaviour, IQuizManager
         jawabanSoalBenar = rataRata;
         string numberString = string.Join(", ", numbers);
 
-        soalSaatIni = $"Hitung rata-rata (mean) dari data berikut:\n{numberString}";
-        langkahPenyelesaian = $"Rumus Mean = Jumlah seluruh data / Banyak data\n" +
-                              $"Jumlah data = {string.Join(" + ", numbers)} = {totalSum}\n" +
-                              $"Banyak data = {jumlahElemen}\n" +
-                              $"Mean = {totalSum} / {jumlahElemen} = {jawabanSoalBenar}";
+        // 50% Soal Cerita Kontekstual vs 50% Numerik
+        bool isSoalCerita = Random.value < 0.5f;
+        string namaSiswa = GradeLevelConfig.GetRandomStudentName();
+
+        if (isSoalCerita)
+        {
+            if (phase == GradePhase.FaseA || phase == GradePhase.FaseB)
+            {
+                soalSaatIni = $"{namaSiswa} mengikuti {jumlahElemen} kali kuis matematika dengan nilai:\n{numberString}\nBerapa nilai rata-rata kuis {namaSiswa}?";
+            }
+            else
+            {
+                soalSaatIni = $"Hasil panen mangga (dalam kg) seorang petani selama {jumlahElemen} hari adalah:\n{numberString}\nBerapa rata-rata hasil panen per hari?";
+            }
+        }
+        else
+        {
+            soalSaatIni = $"Hitung nilai rata-rata (mean) dari data berikut:\n{numberString}";
+        }
+
+        langkahPenyelesaian = $"Langkah Penyelesaian Mean:\n" +
+                              $"1. Jumlahkan semua data:\n   {string.Join(" + ", numbers)} = {totalSum}\n" +
+                              $"2. Hitung banyak data: {jumlahElemen}\n" +
+                              $"3. Bagi jumlah data dengan banyak data:\n   {totalSum} ÷ {jumlahElemen} = {jawabanSoalBenar}\n" +
+                              $"Maka, rata-rata = {jawabanSoalBenar}.";
+
+        petunjukSoal = $"Ingat rumus rata-rata:\nMean = (Jumlah Semua Nilai) ÷ (Banyak Data).\nHitung total nilai terlebih dahulu, lalu bagi dengan {jumlahElemen}.";
 
         questionText.text = soalSaatIni;
         BuatPilihan(jawabanSoalBenar);
@@ -91,6 +177,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
 
     public void SetJawabanPilihan(string pilihan, int nilai, GameObject objekYangDipilih)
     {
+        MathSoundFX.PlayClick();
         jawabanPilihanPemain = pilihan;
         nilaiJawabanPemain = nilai;
         objekTerpilih = objekYangDipilih;
@@ -101,6 +188,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
 
     public void SetJawabanPilihan(string pilihan, string nilai, GameObject objekYangDipilih)
     {
+        MathSoundFX.PlayClick();
         jawabanPilihanPemain = pilihan;
         int.TryParse(nilai, out nilaiJawabanPemain);
         objekTerpilih = objekYangDipilih;
@@ -111,6 +199,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
 
     public void SetJawabanPilihan(string pilihan, float nilai, GameObject objekYangDipilih)
     {
+        MathSoundFX.PlayClick();
         jawabanPilihanPemain = pilihan;
         nilaiJawabanPemain = Mathf.RoundToInt(nilai);
         objekTerpilih = objekYangDipilih;
@@ -121,6 +210,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
 
     public void UndoJawaban()
     {
+        MathSoundFX.PlayClick();
         if (objekTerpilih == null) return;
         jawabanPilihanPemain = "";
         nilaiJawabanPemain = 0;
@@ -144,11 +234,11 @@ public class RataRataManager : MonoBehaviour, IQuizManager
         }
         objekPilihanAktif.Clear();
 
-        // Validasi ganda: via label huruf (A-K) atau nilai integer
         bool lastWasCorrect = (jawabanPilihanPemain == pilihanBenar) || (nilaiJawabanPemain == jawabanSoalBenar);
 
         if (lastWasCorrect)
         {
+            MathSoundFX.PlayCorrect();
             if (ScoreManager.instance != null)
             {
                 ScoreManager.instance.AddScore(10);
@@ -160,6 +250,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
         }
         else
         {
+            MathSoundFX.PlayWrong();
             bool isGameOver = healthManager.ReduceHealth();
             string pembahasan = $"PEMBAHASAN\n\nSoal: {soalSaatIni}\nJawaban Anda: {nilaiJawabanPemain} ({jawabanPilihanPemain})\nJawaban Benar: {jawabanSoalBenar} ({pilihanBenar})\n\n{langkahPenyelesaian}";
 
