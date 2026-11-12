@@ -15,9 +15,9 @@ public class QuizTimer : MonoBehaviour
     [Header("UI")]
     public TMP_Text timerText;
     public Image timerBar;        // progress bar visual (opsional)
-    public Color normalColor = Color.green;
-    public Color warningColor = Color.yellow;
-    public Color dangerColor = Color.red;
+    public Color normalColor = new Color(0.133f, 0.773f, 0.369f, 1f);  // Stitch SecondaryEmerald #22C55E
+    public Color warningColor = new Color(0.961f, 0.620f, 0.043f, 1f); // Stitch TertiaryAmber #F59E0B
+    public Color dangerColor = new Color(0.937f, 0.267f, 0.267f, 1f);  // Stitch CoralRed #EF4444
 
     [Header("Callback")]
     public GameObject targetObject;  // objek yang mengandung method yang dipanggil

@@ -40,6 +40,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
         if (undoButton != null) undoButton.onClick.AddListener(UndoJawaban);
         if (ScoreManager.instance != null) ScoreManager.instance.ResetScore();
 
+        StitchUIThemeApplier.EnhanceQuizHUD(questionText, answerText, checkButton, undoButton);
         SetupHintButton();
         GenerateRandomQuestion();
     }
@@ -93,6 +94,7 @@ public class RataRataManager : MonoBehaviour, IQuizManager
         textRt.offsetMax = Vector2.zero;
 
         hintButton = hintGo.GetComponent<Button>();
+        StitchUIThemeApplier.ApplyTactileButtonStyle(hintButton, StitchUIThemeApplier.TertiaryAmberLight, StitchUIThemeApplier.TertiaryAmber, StitchUIThemeApplier.TertiaryContainer);
         hintButton.onClick.AddListener(TampilkanPetunjuk);
     }
 

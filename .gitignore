@@ -33,6 +33,8 @@
 *.tgz
 *.zip
 *.unitypackage
+/*.dll
+
 
 # Flutter / Dart
 mathlfix_dart/.dart_tool/
@@ -51,3 +53,7 @@ __pycache__/
 # OS generated
 .DS_Store
 Thumbs.db
+
+# Agent caches
+.hermes/
+

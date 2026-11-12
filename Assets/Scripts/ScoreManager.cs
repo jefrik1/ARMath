@@ -125,10 +125,10 @@ public class ScoreManager : MonoBehaviour
     private void UpdateUI()
     {
         if (scoreText != null)
-            scoreText.text = "Score: " + score;
+            scoreText.text = "★ Skor: " + score;
 
         if (highScoreText != null)
-            highScoreText.text = "High Score: " + highScore;
+            highScoreText.text = "Rekor: " + highScore;
     }
 
     public void ResetScore()

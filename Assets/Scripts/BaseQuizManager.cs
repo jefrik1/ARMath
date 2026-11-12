@@ -191,6 +191,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         textRt.offsetMax = Vector2.zero;
 
         hintButton = hintGo.GetComponent<Button>();
+        StitchUIThemeApplier.ApplyTactileButtonStyle(hintButton, StitchUIThemeApplier.TertiaryAmberLight, StitchUIThemeApplier.TertiaryAmber, StitchUIThemeApplier.TertiaryContainer);
         hintButton.onClick.AddListener(TampilkanPetunjuk);
     }
 
@@ -238,6 +239,7 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         textRt.offsetMax = Vector2.zero;
 
         Button drawBtn = drawBtnGo.GetComponent<Button>();
+        StitchUIThemeApplier.ApplyTactileButtonStyle(drawBtn, StitchUIThemeApplier.PrimaryBlueSubtle, StitchUIThemeApplier.PrimaryBlueDeep, StitchUIThemeApplier.PrimaryBlueDeep);
         drawBtn.onClick.AddListener(() =>
         {
             MathSoundFX.PlayClick();
@@ -426,9 +428,9 @@ public abstract class BaseQuizManager<TAnswer> : MonoBehaviour, IQuizManager
         {
             MathSoundFX.PlayWrong();
             bool isGameOver = healthManager.ReduceHealth();
-            string pembahasan = $"PEMBAHASAN\n\nSoal: {soalSaatIni}\n" +
-                                $"Jawaban Anda: {playerAnswerValue} ({playerAnswerLabel})\n" +
-                                $"Jawaban Benar: {correctAnswerLabel} ({correctAnswerValue})\n\n" +
+            string pembahasan = $"Soal: {soalSaatIni}\n\n" +
+                                $"<color=#EF4444><b>Jawaban Kamu:</b> {playerAnswerLabel}. {playerAnswerValue}</color>\n" +
+                                $"<color=#22C55E><b>Jawaban Benar:</b> {correctAnswerLabel}. {correctAnswerValue}</color>\n\n" +
                                 langkahPenyelesaian;
 
             if (isGameOver)

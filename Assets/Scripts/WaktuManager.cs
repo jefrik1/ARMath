@@ -114,7 +114,7 @@ public class WaktuManager : BaseQuizManager<string>
     private void BuatPilihan(string jawabanBenar)
     {
         List<string> pilihan = new List<string> { jawabanBenar };
-        if (jawabanBenar.Contains(':'))
+        if (jawabanBenar.Contains(":"))
         {
             // variasi waktu
             while (pilihan.Count < 4)

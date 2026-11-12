@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 using TMPro;
 
 /// <summary>
@@ -13,11 +14,17 @@ public class StitchUIThemeApplier : MonoBehaviour
     public static StitchUIThemeApplier Instance { get; private set; }
 
     #region Color Tokens (Google Stitch Project 756251947286196394)
+    public static readonly Color Primary              = new Color(0.000f, 0.376f, 0.608f, 1f); // #00609B
+    public static readonly Color PrimaryContainer     = new Color(0.000f, 0.475f, 0.765f, 1f); // #0079C3
+    public static readonly Color PrimaryFixed         = new Color(0.816f, 0.894f, 1.000f, 1f); // #D0E4FF
+    public static readonly Color OnPrimaryFixedVar    = new Color(0.000f, 0.290f, 0.475f, 1f); // #004A79 (3D lip)
     public static readonly Color PrimaryBlue          = new Color(0.114f, 0.561f, 0.882f, 1f); // #1D8FE1
     public static readonly Color PrimaryBlueDeep      = new Color(0.141f, 0.431f, 0.651f, 1f); // #246EA6
     public static readonly Color PrimaryBlueSubtle    = new Color(0.937f, 0.965f, 1.000f, 1f); // #EFF6FF
     public static readonly Color PrimaryBlueLight     = new Color(0.749f, 0.859f, 0.996f, 1f); // #BFDBFE
 
+    public static readonly Color Secondary            = new Color(0.000f, 0.431f, 0.184f, 1f); // #006E2F
+    public static readonly Color OnSecondaryFixedVar  = new Color(0.000f, 0.325f, 0.129f, 1f); // #005321 (3D lip)
     public static readonly Color SecondaryEmerald     = new Color(0.133f, 0.773f, 0.369f, 1f); // #22C55E
     public static readonly Color SecondaryEmeraldDark = new Color(0.082f, 0.502f, 0.239f, 1f); // #15803D
     public static readonly Color SecondaryContainer   = new Color(0.420f, 1.000f, 0.561f, 1f); // #6BFF8F
@@ -29,15 +36,18 @@ public class StitchUIThemeApplier : MonoBehaviour
     public static readonly Color CoralRed             = new Color(0.937f, 0.267f, 0.267f, 1f); // #EF4444
     public static readonly Color CoralRedSubtle       = new Color(0.996f, 0.949f, 0.949f, 1f); // #FEF2F2
 
-    public static readonly Color SurfaceHud           = new Color(0.973f, 0.980f, 0.988f, 0.90f); // rgba(248, 250, 252, 0.90)
+    public static readonly Color SurfaceHud           = new Color(0.973f, 0.980f, 0.988f, 0.88f); // rgba(248, 250, 252, 0.88)
     public static readonly Color SurfaceCanvas        = new Color(0.941f, 0.969f, 1.000f, 1f); // #F0F7FF
     public static readonly Color SurfaceLowest        = new Color(1.000f, 1.000f, 1.000f, 1f); // #FFFFFF
     public static readonly Color SurfaceLow           = new Color(0.941f, 0.953f, 1.000f, 1f); // #F0F3FF
     public static readonly Color SurfaceContainer     = new Color(0.906f, 0.933f, 1.000f, 1f); // #E7EEFF
     public static readonly Color SurfaceHigh          = new Color(0.871f, 0.910f, 1.000f, 1f); // #DEE8FF
+    public static readonly Color SurfaceVariant       = new Color(0.847f, 0.890f, 0.984f, 1f); // #D8E3FB
+    public static readonly Color BackdropDim          = new Color(0.059f, 0.090f, 0.165f, 0.65f); // rgba(15, 23, 42, 0.65)
 
     public static readonly Color OnSurface            = new Color(0.067f, 0.110f, 0.176f, 1f); // #111C2D
     public static readonly Color OnSurfaceVariant     = new Color(0.251f, 0.278f, 0.318f, 1f); // #404751
+    public static readonly Color Outline              = new Color(0.439f, 0.471f, 0.514f, 1f); // #707883
     public static readonly Color OutlineVariant       = new Color(0.749f, 0.780f, 0.827f, 1f); // #BFC7D3
     #endregion
 
@@ -155,7 +165,64 @@ public class StitchUIThemeApplier : MonoBehaviour
     }
 
     /// <summary>
-    /// Terapkan gaya Tactile Button Stitch (rounded full pill, 3D bottom press depth).
+    /// Sprite pill dengan 3D bottom extrusion lip (sesuai gaya Tactile Gamified HUD Stitch).
+    /// </summary>
+    public static Sprite GetTactilePillSprite(Color fillColor, Color lipColor, int lipHeight = 5)
+    {
+        int r = 28;
+        int pad = 2;
+        int lh = Mathf.Clamp(lipHeight, 2, 10);
+        int size = (r + pad) * 2 + 2;
+
+        string key = $"tactile_{r}_{lh}_{fillColor.r:F2}_{fillColor.g:F2}_{fillColor.b:F2}_{lipColor.r:F2}_{lipColor.g:F2}_{lipColor.b:F2}";
+        if (spriteCache.TryGetValue(key, out Sprite cached))
+            return cached;
+
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        tex.filterMode = FilterMode.Bilinear;
+        tex.wrapMode = TextureWrapMode.Clamp;
+
+        Color[] pixels = new Color[size * size];
+        float centerOffset = r + pad;
+
+        for (int y = 0; y < size; y++)
+        {
+            for (int x = 0; x < size; x++)
+            {
+                float cx = (x < centerOffset) ? centerOffset : size - 1 - centerOffset;
+                float cyOuter = (y < centerOffset) ? centerOffset : size - 1 - centerOffset;
+                float distOuter = Mathf.Sqrt((x - cx) * (x - cx) + (y - cyOuter) * (y - cyOuter));
+                float alphaOuter = Mathf.Clamp01(r + 0.5f - distOuter);
+
+                if (alphaOuter <= 0f)
+                {
+                    pixels[y * size + x] = Color.clear;
+                    continue;
+                }
+
+                // Fill pill digeser naik lh pixel dari bawah agar lip bawah tampak tebal 3D
+                float cyInner = (y < centerOffset + lh) ? (centerOffset + lh) : size - 1 - centerOffset;
+                float distInner = Mathf.Sqrt((x - cx) * (x - cx) + (y - cyInner) * (y - cyInner));
+                float alphaInner = (y >= lh) ? Mathf.Clamp01(r - 0.5f - distInner) : 0f;
+
+                Color col = Color.Lerp(lipColor, fillColor, alphaInner);
+                col.a *= alphaOuter;
+                pixels[y * size + x] = col;
+            }
+        }
+
+        tex.SetPixels(pixels);
+        tex.Apply();
+
+        float borderInset = r + pad;
+        Vector4 border = new Vector4(borderInset, borderInset + lh, borderInset, borderInset);
+        Sprite sprite = Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, border);
+        spriteCache[key] = sprite;
+        return sprite;
+    }
+
+    /// <summary>
+    /// Terapkan gaya Tactile Button Stitch (rounded full pill, 3D bottom press depth + animasi tekan).
     /// </summary>
     public static void ApplyTactileButtonStyle(Button btn, Color normalBg, Color pressLipColor, Color textColor)
     {
@@ -163,17 +230,20 @@ public class StitchUIThemeApplier : MonoBehaviour
         Image img = btn.GetComponent<Image>();
         if (img != null)
         {
-            img.sprite = GetPillSprite(normalBg, pressLipColor, 2f);
+            img.sprite = GetTactilePillSprite(normalBg, pressLipColor, 5);
             img.type = Image.Type.Sliced;
             img.color = Color.white;
         }
 
         ColorBlock cb = btn.colors;
         cb.normalColor = Color.white;
-        cb.highlightedColor = new Color(1f, 1f, 1f, 0.95f);
-        cb.pressedColor = new Color(0.9f, 0.9f, 0.9f, 1f);
+        cb.highlightedColor = new Color(1f, 1f, 1f, 0.96f);
+        cb.pressedColor = new Color(0.92f, 0.92f, 0.92f, 1f);
         cb.selectedColor = Color.white;
         btn.colors = cb;
+
+        if (btn.GetComponent<StitchTactilePress>() == null)
+            btn.gameObject.AddComponent<StitchTactilePress>();
 
         TMP_Text tmp = btn.GetComponentInChildren<TMP_Text>();
         if (tmp != null)
@@ -408,42 +478,46 @@ public class StitchUIThemeApplier : MonoBehaviour
     public static void EnhanceQuizHUD<T>(BaseQuizManager<T> quiz)
     {
         if (quiz == null) return;
+        EnhanceQuizHUD(quiz.questionText, quiz.answerText, quiz.checkButton, quiz.undoButton);
+    }
 
+    public static void EnhanceQuizHUD(TMP_Text questionText, TMP_Text answerText, Button checkButton, Button undoButton)
+    {
         // 1. Question Card
-        if (quiz.questionText != null)
+        if (questionText != null)
         {
-            Transform parent = quiz.questionText.transform.parent;
+            Transform parent = questionText.transform.parent;
             if (parent != null)
             {
                 Image cardImg = parent.GetComponent<Image>();
                 if (cardImg != null)
                     ApplyCardStyle(cardImg, SurfaceHud, PrimaryBlueLight, 24f, 2f);
             }
-            quiz.questionText.color = OnSurface;
-            quiz.questionText.fontStyle = FontStyles.Bold;
+            questionText.color = OnSurface;
+            questionText.fontStyle = FontStyles.Bold;
         }
 
         // 2. Answer selection status strip
-        if (quiz.answerText != null)
+        if (answerText != null)
         {
-            Transform strip = quiz.answerText.transform.parent;
+            Transform strip = answerText.transform.parent;
             if (strip != null)
             {
                 Image stripImg = strip.GetComponent<Image>();
                 if (stripImg != null)
                     ApplyCardStyle(stripImg, PrimaryBlueSubtle, PrimaryBlueLight, 16f, 1f);
             }
-            quiz.answerText.color = PrimaryBlueDeep;
+            answerText.color = PrimaryBlueDeep;
         }
 
         // 3. Bottom Action Buttons (Check, Undo, Hint)
-        if (quiz.checkButton != null)
+        if (checkButton != null)
         {
-            ApplyTactileButtonStyle(quiz.checkButton, SecondaryEmerald, SecondaryEmeraldDark, Color.white);
+            ApplyTactileButtonStyle(checkButton, SecondaryEmerald, SecondaryEmeraldDark, Color.white);
         }
-        if (quiz.undoButton != null)
+        if (undoButton != null)
         {
-            ApplyTactileButtonStyle(quiz.undoButton, CoralRedSubtle, CoralRed, CoralRed);
+            ApplyTactileButtonStyle(undoButton, CoralRedSubtle, CoralRed, CoralRed);
         }
     }
 
@@ -500,4 +574,33 @@ public class StitchUIThemeApplier : MonoBehaviour
         }
     }
     #endregion
+}
+
+/// <summary>
+/// Komponen micro-interaction tactile press (sedikit mengecil/turun saat ditekan seperti tombol Duolingo/Stitch).
+/// </summary>
+public class StitchTactilePress : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
+{
+    private Vector3 originalScale = Vector3.one;
+    private bool initialized = false;
+
+    public void OnPointerDown(PointerEventData eventData)
+    {
+        if (!initialized)
+        {
+            originalScale = transform.localScale;
+            initialized = true;
+        }
+        transform.localScale = originalScale * 0.96f;
+    }
+
+    public void OnPointerUp(PointerEventData eventData)
+    {
+        if (initialized) transform.localScale = originalScale;
+    }
+
+    public void OnPointerExit(PointerEventData eventData)
+    {
+        if (initialized) transform.localScale = originalScale;
+    }
 }
